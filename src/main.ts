@@ -2,14 +2,13 @@ import './styles/main.css';
 
 import { DiagramRenderer } from '@components/diagram-renderer';
 import { DiffViewer } from '@components/diff-viewer';
-import { CallHierarchyPanel } from '@components/call-hierarchy-panel';
 import { FileUploader } from '@components/file-uploader';
 
 import { getElement } from './utils/dom-helpers';
 import { parseDiff } from '@lib/diff-parser';
 import { extractFunctions } from '@lib/function-extractor';
 import { generateMermaidDiagram } from '@lib/diagram-generator';
-import { extractCallHierarchy } from '@lib/call-hierarchy-analyzer';
+// import { extractCallHierarchy } from '@lib/call-hierarchy-analyzer';
 
 /**
  * Code Review Tool - Main Application
@@ -17,7 +16,6 @@ import { extractCallHierarchy } from '@lib/call-hierarchy-analyzer';
 class CodeReviewApp {
   private diagram: DiagramRenderer;
   private diffViewer: DiffViewer;
-  private hierarchyPanel: CallHierarchyPanel;
   private uploader: FileUploader;
 
   private parsedDiff: any = null;
@@ -27,7 +25,7 @@ class CodeReviewApp {
     // Initialize components
     this.diagram = new DiagramRenderer(getElement('#mermaid-diagram'));
     this.diffViewer = new DiffViewer(getElement('#diff-content'));
-    this.hierarchyPanel = new CallHierarchyPanel(getElement('#call-hierarchy-content'));
+    // Call hierarchy panel temporarily disabled
 
     const fileInput = getElement<HTMLInputElement>('#diff-file');
     const fileName = getElement('#file-name');
@@ -52,10 +50,7 @@ class CodeReviewApp {
       this.handleNodeClick(funcNode);
     });
 
-    // Text selection for call hierarchy
-    this.diffViewer.on('textSelect', (text) => {
-      this.handleTextSelection(text);
-    });
+    // Text selection for call hierarchy temporarily disabled
   }
 
   private async handleFileLoad(content: string): Promise<void> {
@@ -87,16 +82,11 @@ class CodeReviewApp {
     }
   }
 
-  private handleTextSelection(text: string): void {
-    if (!this.currentFile || !this.parsedDiff) return;
-    const hierarchy = extractCallHierarchy(text, this.currentFile, this.parsedDiff);
-    this.hierarchyPanel.show(hierarchy);
-  }
+  // Call hierarchy interactions temporarily removed
 
   destroy(): void {
     this.diagram.destroy();
     this.diffViewer.destroy();
-    this.hierarchyPanel.destroy();
     this.uploader.destroy();
   }
 }
