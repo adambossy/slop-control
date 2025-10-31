@@ -44,12 +44,34 @@ input[type="file"] {
 }
 
 /* Mermaid Diagram */
+.diagram-pane .pane-content {
+  display: flex;
+  flex-direction: column;
+  /* Prevent inner overflow from clipping the diagram; the diagram fills remaining height */
+  overflow: hidden;
+}
+
+.diagram-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 #mermaid-diagram {
   width: 100%;
-  height: 100%;
+  /* Fill remaining height below the toolbar */
+  flex: 1;
+  min-height: 0; /* allow flex child to shrink without overflowing */
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.diagram-pane #mermaid-diagram svg {
+  width: 100%;
+  height: 100%;
 }
 
 .node-highlight {

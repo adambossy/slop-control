@@ -26,6 +26,12 @@
         <div class="pane diagram-pane">
           <div class="pane-header">Dataflow Diagram</div>
           <div class="pane-content">
+            <div class="diagram-toolbar" id="diagram-toolbar">
+              <button id="diagram-zoom-out" title="Zoom out">−</button>
+              <span id="diagram-zoom-percentage" aria-live="polite">100%</span>
+              <button id="diagram-zoom-in" title="Zoom in">+</button>
+              <button id="diagram-zoom-reset" title="Reset view">Reset</button>
+            </div>
             <div id="mermaid-diagram">
               <div class="loading">Load a git diff file to see the dataflow diagram</div>
             </div>
