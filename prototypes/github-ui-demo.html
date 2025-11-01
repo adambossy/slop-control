@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GitHub UI Demo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+    h1 { font-size: 18px; margin: 0 0 16px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; max-width: 1280px; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+    .fields-row { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 20px; }
+    .field { position: relative; flex: 1; min-width: 0; overflow: visible; }
+    .field-label { position: absolute; left: 12px; top: -8px; padding: 0 6px; background: #fff; color: #6b7280; font-size: 11px; line-height: 1; pointer-events: none; z-index: 10; }
+    .field.field--focused .field-label { color: #111827; }
+
+    input[type="text"], select { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; min-width: 260px; font-size: 14px; box-sizing: border-box; }
+    input[type="text"]:focus, select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .field input[type="text"] { width: 100%; min-height: 44px; }
+    button { background: #111827; color: white; border: 0; border-radius: 6px; padding: 10px 14px; font-size: 14px; cursor: pointer; }
+    button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .muted { color: #6b7280; font-size: 12px; }
+    #status { margin-top: 8px; font-size: 13px; }
+    .col { display: flex; flex-direction: column; gap: 6px; }
+
+    /* Choices controls fill parent, dropdowns match exactly */
+    .choices { width: 100%; overflow: visible; box-sizing: border-box; }
+    .choices__inner { width: 100%; box-sizing: border-box; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden; background: #fff; color: #111827; }
+    .choices[data-type*=select-one].is-disabled .choices__inner { background: #f9fafb; color: #9ca3af; }
+    .choices__list--single { display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .choices__item--selectable { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #111827; }
+    .choices.is-disabled .choices__item--selectable { color: #9ca3af; }
+    .choices__list--dropdown { width: 100%; left: 0; box-sizing: border-box; }
+    .choices[data-type*=select-one] .choices__list { width: 100%; box-sizing: border-box; }
+    /* Prevent aggressive wrapping; show ellipsis */
+    .choices__list--dropdown .choices__item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  </style>
+</head>
+<body>
+  <h1>GitHub Controls — Demo</h1>
+
+  <div class="card">
+    <div class="row">
+      <div class="field" id="field-repo">
+        <label class="field-label" for="repo-input">Owner/Repo</label>
+        <input id="repo-input" type="text" />
+      </div>
+      <button id="load-branches">Load</button>
+    </div>
+
+    <div class="fields-row">
+      <div class="field" id="field-branch">
+        <label class="field-label" for="branch-select">Branch</label>
+        <select id="branch-select" disabled></select>
+      </div>
+      <div class="field" id="field-base">
+        <label class="field-label" for="base-select">Base</label>
+        <select id="base-select" disabled></select>
+      </div>
+      <div class="field" id="field-head">
+        <label class="field-label" for="head-select">Head</label>
+        <select id="head-select" disabled></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="load-diff" disabled>Load Diff</button>
+      <div id="status" class="muted" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script type="module">
+    import { Octokit } from 'https://esm.sh/@octokit/rest@20';
+
+    // Minimal GitHub client (unauthenticated)
+    class GithubClient {
+      /** @type {any} */ octokit;
+      constructor() { this.octokit = new Octokit(); }
+
+      /** @returns {Promise<Array<{name:string; commitSha:string}>>} */
+      async listBranches(owner, repo) {
+        const res = await this.octokit.repos.listBranches({ owner, repo, per_page: 100 });
+        return res.data.map(b => ({ name: b.name, commitSha: b.commit?.sha ?? '' }));
+      }
+
+      /** @returns {Promise<Array<{sha:string; message:string; date:string; author?:string}>>} */
+      async listCommits(owner, repo, branch) {
+        const res = await this.octokit.repos.listCommits({ owner, repo, sha: branch, per_page: 100 });
+        return res.data.map(c => ({
+          sha: c.sha,
+          message: (c.commit?.message ?? '').split('\n')[0],
+          date: c.commit?.author?.date ?? '',
+          author: c.commit?.author?.name
+        }));
+      }
+
+      /** @returns {Promise<string|null>} */
+      async getFirstParent(owner, repo, sha) {
+        const res = await this.octokit.repos.getCommit({ owner, repo, ref: sha });
+        return res.data.parents?.[0]?.sha ?? null;
+      }
+    }
+
+    // UI wiring
+    const client = new GithubClient();
+
+    const repoInput = /** @type {HTMLInputElement} */(document.getElementById('repo-input'));
+    const repoField = /** @type {HTMLDivElement} */(document.getElementById('field-repo'));
+    const loadBranchesBtn = /** @type {HTMLButtonElement} */(document.getElementById('load-branches'));
+
+    const branchField = /** @type {HTMLDivElement} */(document.getElementById('field-branch'));
+    const baseField = /** @type {HTMLDivElement} */(document.getElementById('field-base'));
+    const headField = /** @type {HTMLDivElement} */(document.getElementById('field-head'));
+
+    const branchSelect = /** @type {HTMLSelectElement} */(document.getElementById('branch-select'));
+    const baseSelect = /** @type {HTMLSelectElement} */(document.getElementById('base-select'));
+    const headSelect = /** @type {HTMLSelectElement} */(document.getElementById('head-select'));
+
+    const loadBtn = /** @type {HTMLButtonElement} */(document.getElementById('load-diff'));
+    const statusEl = /** @type {HTMLDivElement} */(document.getElementById('status'));
+
+    /** @type {Array<{name:string; commitSha:string}>} */
+    let branches = [];
+    /** @type {Array<{sha:string; message:string; date:string; author?:string}>} */
+    let commits = [];
+
+    // Choices instances
+    /** @type {any} */ let branchChoices;
+    /** @type {any} */ let baseChoices;
+    /** @type {any} */ let headChoices;
+
+    // Float label helpers
+    function bindFieldFocus(fieldEl) {
+      const container = fieldEl.querySelector('.choices');
+      if (!container) return;
+      if (!container.__floatBound) {
+        container.addEventListener('focusin', () => fieldEl.classList.add('field--focused'));
+        container.addEventListener('focusout', () => fieldEl.classList.remove('field--focused'));
+        container.__floatBound = true;
+      }
+    }
+    function refreshFieldState(fieldEl, choicesInstance) {
+      const val = choicesInstance.getValue(true);
+      if (val) fieldEl.classList.add('field--hasValue'); else fieldEl.classList.remove('field--hasValue');
+    }
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+    function shaShort(sha) { return (sha ?? '').slice(0, 7); }
+
+    function parseOwnerRepo(input) {
+      const [owner, repo] = (input || '').trim().split('/');
+      if (!owner || !repo) return null;
+      return { owner, repo };
+    }
+
+    function ensureChoices() {
+      if (!branchChoices) branchChoices = new window.Choices(branchSelect, {
+        searchEnabled: true, shouldSort: false, placeholderValue: 'Select branch', allowHTML: false
+      });
+      if (!baseChoices) baseChoices = new window.Choices(baseSelect, {
+        searchEnabled: true, shouldSort: false, placeholderValue: 'Select base commit', allowHTML: false
+      });
+      if (!headChoices) headChoices = new window.Choices(headSelect, {
+        searchEnabled: true, shouldSort: false, placeholderValue: 'Select head commit (optional)', allowHTML: false
+      });
+
+      // Bind focus events for floating labels
+      bindFieldFocus(branchField); bindFieldFocus(baseField); bindFieldFocus(headField);
+
+      // Change handlers to refresh floating state
+      branchSelect.addEventListener('change', () => refreshFieldState(branchField, branchChoices));
+      baseSelect.addEventListener('change', () => refreshFieldState(baseField, baseChoices));
+      headSelect.addEventListener('change', () => refreshFieldState(headField, headChoices));
+    }
+
+    function setBranchChoices(items) {
+      branchChoices.clearStore();
+      branchChoices.setChoices(items, 'value', 'label', true);
+      branchChoices.enable();
+      refreshFieldState(branchField, branchChoices);
+    }
+    function setBaseChoices(items) {
+      baseChoices.clearStore();
+      baseChoices.setChoices(items, 'value', 'label', true);
+      baseChoices.enable();
+      refreshFieldState(baseField, baseChoices);
+    }
+    function setHeadChoices(items) {
+      headChoices.clearStore();
+      headChoices.setChoices(items, 'value', 'label', true);
+      headChoices.removeActiveItems();
+      headChoices.enable();
+      refreshFieldState(headField, headChoices);
+    }
+
+    async function onLoadBranches() {
+      const or = parseOwnerRepo(repoInput.value);
+      if (!or) { setStatus('Enter repo as owner/repo'); return; }
+      setStatus('Loading branches…');
+      try {
+        branches = await client.listBranches(or.owner, or.repo);
+        const items = branches.map(b => ({ value: b.name, label: b.name }));
+        setBranchChoices(items);
+        branchSelect.disabled = false; // for underlying select
+        loadBtn.disabled = false;
+        setStatus(`Loaded ${branches.length} branches`);
+      } catch (e) {
+        setStatus('Failed to load branches');
+        console.error(e);
+      }
+    }
+
+    async function onBranchChange() {
+      const or = parseOwnerRepo(repoInput.value);
+      const branch = branchChoices ? (branchChoices.getValue(true) || '') : branchSelect.value;
+      refreshFieldState(branchField, branchChoices);
+      if (!or || !branch) return;
+      setStatus(`Loading commits for ${branch}…`);
+      try {
+        commits = await client.listCommits(or.owner, or.repo, branch);
+        const newestFirst = commits.map(c => ({ value: c.sha, label: `${shaShort(c.sha)} — ${c.message}` }));
+        const oldestFirst = newestFirst.slice().reverse();
+        setBaseChoices(oldestFirst); // base: older first
+        setHeadChoices(newestFirst); // head: newer first
+        baseSelect.disabled = false; headSelect.disabled = false; // underlying
+        setStatus(`Loaded ${commits.length} commits`);
+      } catch (e) {
+        setStatus('Failed to load commits');
+        console.error(e);
+      }
+    }
+
+    function isHeadAfterBase(baseSha, headSha) {
+      const index = new Map(commits.map((c, i) => [c.sha, i])); // commits is newest-first
+      const b = index.get(baseSha); const h = index.get(headSha);
+      if (b == null || h == null) return true; // fallback
+      return h < b; // head must be newer (lower index)
+    }
+
+    async function onLoadDiff() {
+      const or = parseOwnerRepo(repoInput.value);
+      if (!or) { setStatus('Invalid repo'); return; }
+      const base = baseChoices ? (baseChoices.getValue(true) || '') : baseSelect.value;
+      const head = headChoices ? (headChoices.getValue(true) || '') : headSelect.value;
+
+      refreshFieldState(baseField, baseChoices);
+      refreshFieldState(headField, headChoices);
+
+      if (!base) { setStatus('Select base commit'); return; }
+
+      if (!head) {
+        // Single-commit mode: derive parent of base
+        setStatus('Resolving parent…');
+        const parent = await client.getFirstParent(or.owner, or.repo, base);
+        if (!parent) { setStatus('No parent found'); return; }
+        const msg = `Compare ${shaShort(parent)}...${shaShort(base)}`;
+        setStatus(msg);
+        alert(msg);
+        console.log({ owner: or.owner, repo: or.repo, base: parent, head: base });
+        return;
+      }
+
+      // Range mode
+      if (!isHeadAfterBase(base, head)) { setStatus('Head must be newer than base'); return; }
+      const msg = `Compare ${shaShort(base)}...${shaShort(head)}`;
+      setStatus(msg);
+      alert(msg);
+      console.log({ owner: or.owner, repo: or.repo, base, head });
+    }
+
+    // Initialize Choices on page load so styling is correct from the start
+    ensureChoices();
+
+    // Floating label behavior for text input
+    repoInput.addEventListener('focus', () => repoField.classList.add('field--focused'));
+    repoInput.addEventListener('blur', () => repoField.classList.remove('field--focused'));
+
+    // Events
+    loadBranchesBtn.addEventListener('click', () => { void onLoadBranches(); });
+    branchSelect.addEventListener('change', () => { void onBranchChange(); });
+    baseSelect.addEventListener('change', () => { refreshFieldState(baseField, baseChoices); });
+    headSelect.addEventListener('change', () => { refreshFieldState(headField, headChoices); });
+
+  </script>
+</body>
+</html>
