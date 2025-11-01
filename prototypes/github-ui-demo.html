@@ -10,7 +10,7 @@
     h1 { font-size: 18px; margin: 0 0 16px; }
     .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; max-width: 1280px; }
     .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-    .fields-row { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 20px; }
+    .fields-row { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
     .field { position: relative; flex: 1; min-width: 0; overflow: visible; }
     .field-label { position: absolute; left: 12px; top: -8px; padding: 0 6px; background: #fff; color: #6b7280; font-size: 11px; line-height: 1; pointer-events: none; z-index: 10; }
     .field.field--focused .field-label { color: #111827; }
@@ -20,9 +20,27 @@
     .field input[type="text"] { width: 100%; min-height: 44px; }
     button { background: #111827; color: white; border: 0; border-radius: 6px; padding: 10px 14px; font-size: 14px; cursor: pointer; }
     button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .action-btn { width: 120px; flex-shrink: 0; }
     .muted { color: #6b7280; font-size: 12px; }
-    #status { margin-top: 8px; font-size: 13px; }
     .col { display: flex; flex-direction: column; gap: 6px; }
+    
+    /* Loading spinner inside dropdown */
+    .field-loading .choices__inner::after {
+      content: '';
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e5e7eb;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
 
     /* Choices controls fill parent, dropdowns match exactly */
     .choices { width: 100%; overflow: visible; box-sizing: border-box; }
@@ -46,7 +64,7 @@
         <label class="field-label" for="repo-input">Owner/Repo</label>
         <input id="repo-input" type="text" />
       </div>
-      <button id="load-branches">Load</button>
+      <button id="load-branches" class="action-btn">Load Repo</button>
     </div>
 
     <div class="fields-row">
@@ -62,12 +80,9 @@
         <label class="field-label" for="head-select">Head</label>
         <select id="head-select" disabled></select>
       </div>
+      <button id="load-diff" class="action-btn" disabled>Load Diff</button>
     </div>
 
-    <div class="row">
-      <button id="load-diff" disabled>Load Diff</button>
-      <div id="status" class="muted" aria-live="polite"></div>
-    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
@@ -119,7 +134,6 @@
     const headSelect = /** @type {HTMLSelectElement} */(document.getElementById('head-select'));
 
     const loadBtn = /** @type {HTMLButtonElement} */(document.getElementById('load-diff'));
-    const statusEl = /** @type {HTMLDivElement} */(document.getElementById('status'));
 
     /** @type {Array<{name:string; commitSha:string}>} */
     let branches = [];
@@ -146,7 +160,6 @@
       if (val) fieldEl.classList.add('field--hasValue'); else fieldEl.classList.remove('field--hasValue');
     }
 
-    function setStatus(msg) { statusEl.textContent = msg; }
     function shaShort(sha) { return (sha ?? '').slice(0, 7); }
 
     function parseOwnerRepo(input) {
@@ -197,18 +210,27 @@
 
     async function onLoadBranches() {
       const or = parseOwnerRepo(repoInput.value);
-      if (!or) { setStatus('Enter repo as owner/repo'); return; }
-      setStatus('Loading branches…');
+      if (!or) return;
+      branchField.classList.add('field-loading');
       try {
         branches = await client.listBranches(or.owner, or.repo);
         const items = branches.map(b => ({ value: b.name, label: b.name }));
-        setBranchChoices(items);
+        // Update placeholder to show count
+        branchChoices.clearStore();
+        branchChoices.setChoices(items, 'value', 'label', true);
+        branchChoices.setChoiceByValue(''); // Clear selection
+        // Update the placeholder via config
+        branchChoices.config.placeholderValue = `Select from ${branches.length} branches`;
+        // Force placeholder update by re-rendering
+        const container = branchSelect.parentElement?.querySelector('.choices__input');
+        if (container) container.setAttribute('placeholder', `Select from ${branches.length} branches`);
+        branchChoices.enable();
         branchSelect.disabled = false; // for underlying select
         loadBtn.disabled = false;
-        setStatus(`Loaded ${branches.length} branches`);
       } catch (e) {
-        setStatus('Failed to load branches');
-        console.error(e);
+        console.error('Failed to load branches', e);
+      } finally {
+        branchField.classList.remove('field-loading');
       }
     }
 
@@ -217,18 +239,39 @@
       const branch = branchChoices ? (branchChoices.getValue(true) || '') : branchSelect.value;
       refreshFieldState(branchField, branchChoices);
       if (!or || !branch) return;
-      setStatus(`Loading commits for ${branch}…`);
+      baseField.classList.add('field-loading');
+      headField.classList.add('field-loading');
       try {
         commits = await client.listCommits(or.owner, or.repo, branch);
         const newestFirst = commits.map(c => ({ value: c.sha, label: `${shaShort(c.sha)} — ${c.message}` }));
         const oldestFirst = newestFirst.slice().reverse();
-        setBaseChoices(oldestFirst); // base: older first
-        setHeadChoices(newestFirst); // head: newer first
+        
+        // Update Base dropdown with commit count in placeholder
+        baseChoices.clearStore();
+        baseChoices.setChoices(oldestFirst, 'value', 'label', true);
+        baseChoices.setChoiceByValue('');
+        baseChoices.config.placeholderValue = `Select base from ${commits.length} commits`;
+        const baseInput = baseSelect.parentElement?.querySelector('.choices__input');
+        if (baseInput) baseInput.setAttribute('placeholder', `Select base from ${commits.length} commits`);
+        baseChoices.enable();
+        
+        // Update Head dropdown with commit count in placeholder
+        headChoices.clearStore();
+        headChoices.setChoices(newestFirst, 'value', 'label', true);
+        headChoices.removeActiveItems();
+        headChoices.config.placeholderValue = `(Optional) Select head from ${commits.length} commits`;
+        const headInput = headSelect.parentElement?.querySelector('.choices__input');
+        if (headInput) headInput.setAttribute('placeholder', `(Optional) Select head from ${commits.length} commits`);
+        headChoices.enable();
+        
         baseSelect.disabled = false; headSelect.disabled = false; // underlying
-        setStatus(`Loaded ${commits.length} commits`);
+        refreshFieldState(baseField, baseChoices);
+        refreshFieldState(headField, headChoices);
       } catch (e) {
-        setStatus('Failed to load commits');
-        console.error(e);
+        console.error('Failed to load commits', e);
+      } finally {
+        baseField.classList.remove('field-loading');
+        headField.classList.remove('field-loading');
       }
     }
 
@@ -248,24 +291,21 @@
       refreshFieldState(baseField, baseChoices);
       refreshFieldState(headField, headChoices);
 
-      if (!base) { setStatus('Select base commit'); return; }
+      if (!base) { console.error('Select base commit'); return; }
 
       if (!head) {
         // Single-commit mode: derive parent of base
-        setStatus('Resolving parent…');
         const parent = await client.getFirstParent(or.owner, or.repo, base);
-        if (!parent) { setStatus('No parent found'); return; }
+        if (!parent) { console.error('No parent found'); return; }
         const msg = `Compare ${shaShort(parent)}...${shaShort(base)}`;
-        setStatus(msg);
         alert(msg);
         console.log({ owner: or.owner, repo: or.repo, base: parent, head: base });
         return;
       }
 
       // Range mode
-      if (!isHeadAfterBase(base, head)) { setStatus('Head must be newer than base'); return; }
+      if (!isHeadAfterBase(base, head)) { console.error('Head must be newer than base'); return; }
       const msg = `Compare ${shaShort(base)}...${shaShort(head)}`;
-      setStatus(msg);
       alert(msg);
       console.log({ owner: or.owner, repo: or.repo, base, head });
     }
@@ -276,6 +316,9 @@
     // Floating label behavior for text input
     repoInput.addEventListener('focus', () => repoField.classList.add('field--focused'));
     repoInput.addEventListener('blur', () => repoField.classList.remove('field--focused'));
+    repoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { void onLoadBranches(); }
+    });
 
     // Events
     loadBranchesBtn.addEventListener('click', () => { void onLoadBranches(); });
