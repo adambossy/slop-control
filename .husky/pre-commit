@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+set -euo pipefail
+
+# Ensure Bun is available
+if ! command -v bun >/dev/null 2>&1; then
+  echo "[pre-commit] Bun is required (https://bun.sh). Aborting." >&2
+  exit 1
+fi
+
+echo "[pre-commit] Formatting code (prettier)..."
+bun run format
+
+# Re-stage any files formatted by Prettier
+git add -A
+
+echo "[pre-commit] Linting (eslint)..."
+bun run lint
+
+echo "[pre-commit] Typechecking (tsc)..."
+bun run typecheck
+
+echo "[pre-commit] All checks passed."
+
+
