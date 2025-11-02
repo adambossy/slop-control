@@ -1,5 +1,5 @@
 export class FileUploader {
-  private listeners = new Map<string, Set<Function>>();
+  private listeners = new Map<"fileLoaded", Set<(content: string) => void>>();
 
   constructor(
     private input: HTMLInputElement,
@@ -28,8 +28,8 @@ export class FileUploader {
     this.listeners.get(event)!.add(handler);
   }
 
-  private emit(event: string, ...args: any[]): void {
-    this.listeners.get(event)?.forEach((handler) => handler(...args));
+  private emit(event: "fileLoaded", content: string): void {
+    this.listeners.get(event)?.forEach((handler) => handler(content));
   }
 
   destroy(): void {

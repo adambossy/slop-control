@@ -10,8 +10,22 @@ interface CommitItem {
   author?: string;
 }
 
+interface GithubInputsEventMap {
+  repoValid: (repo: string) => void;
+  branchSelected: (branch: string) => void;
+  fetch: (args: {
+    owner: string;
+    repo: string;
+    base: string;
+    head: string;
+  }) => void;
+}
+
 export class GithubInputs {
-  private listeners = new Map<string, Set<Function>>();
+  private listeners = new Map<
+    keyof GithubInputsEventMap,
+    Set<GithubInputsEventMap[keyof GithubInputsEventMap]>
+  >();
   private client: GithubClient | null = null;
 
   constructor(
@@ -78,18 +92,23 @@ export class GithubInputs {
     // Placeholder for future enhancement: wire to datalist/autocomplete
   }
 
-  on(
-    event: "repoValid" | "branchSelected" | "fetch",
-    handler: (arg: any) => void,
+  on<E extends keyof GithubInputsEventMap>(
+    event: E,
+    handler: GithubInputsEventMap[E],
   ): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(handler);
+    (this.listeners.get(event) as Set<GithubInputsEventMap[E]>).add(handler);
   }
 
-  private emit(event: string, ...args: any[]): void {
-    this.listeners.get(event)?.forEach((h) => h(...args));
+  private emit<E extends keyof GithubInputsEventMap>(
+    event: E,
+    ...args: Parameters<GithubInputsEventMap[E]>
+  ): void {
+    (
+      this.listeners.get(event) as Set<GithubInputsEventMap[E]> | undefined
+    )?.forEach((h) => (h as (...a: unknown[]) => void)(...(args as unknown[])));
   }
 
   destroy(): void {

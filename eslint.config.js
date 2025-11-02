@@ -38,7 +38,7 @@ export default tseslint.config(
       "@typescript-eslint/consistent-type-imports": "warn",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
-      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/no-unsafe-function-type": "error",
       "@typescript-eslint/prefer-for-of": "error",
     },
   },

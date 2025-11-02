@@ -4,7 +4,10 @@ import type { FunctionNode } from "@types";
 import { showLoading, showError } from "../utils/dom-helpers";
 
 export class DiagramRenderer {
-  private listeners = new Map<string, Set<Function>>();
+  private listeners = new Map<
+    "nodeClick",
+    Set<(funcNode: FunctionNode) => void>
+  >();
   private functionNodes: FunctionNode[] = [];
   private initialized = false;
   private panZoom: SvgPanZoom.Instance | undefined;
@@ -66,8 +69,8 @@ export class DiagramRenderer {
     this.listeners.get(event)!.add(handler);
   }
 
-  private emit(event: string, ...args: any[]): void {
-    this.listeners.get(event)?.forEach((handler) => handler(...args));
+  private emit(event: "nodeClick", funcNode: FunctionNode): void {
+    this.listeners.get(event)?.forEach((handler) => handler(funcNode));
   }
 
   private attachClickHandlers(): void {

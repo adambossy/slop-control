@@ -3,7 +3,7 @@ import { escapeHtml } from "../utils/escape-html";
 import { showEmptyState } from "../utils/dom-helpers";
 
 export class DiffViewer {
-  private listeners = new Map<string, Set<Function>>();
+  private listeners = new Map<"textSelect", Set<(text: string) => void>>();
 
   constructor(private container: HTMLElement) {
     this.setupTextSelectionHandler();
@@ -135,8 +135,8 @@ export class DiffViewer {
     this.listeners.get(event)!.add(handler);
   }
 
-  private emit(event: string, ...args: any[]): void {
-    this.listeners.get(event)?.forEach((handler) => handler(...args));
+  private emit(event: "textSelect", text: string): void {
+    this.listeners.get(event)?.forEach((handler) => handler(text));
   }
 
   destroy(): void {
