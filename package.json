@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -12,9 +15,14 @@
     "format": "bunx prettier --write .",
     "format:check": "bunx prettier --check .",
     "test": "bun test --bail",
-    "prepare": "husky"
+    "prepare": "husky",
+    "server:dev": "bunx tsx watch server/src/index.ts",
+    "server:build": "tsc -p tsconfig.server.json",
+    "server:start": "node --enable-source-maps server/dist/index.js"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/express": "^4.17.21",
     "@types/node": "^24.9.2",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
@@ -25,13 +33,16 @@
     "eslint": "^9.38.0",
     "husky": "^9.1.6",
     "prettier": "^3.6.2",
+    "tsx": "^4.19.2",
     "typescript": "~5.9.3",
     "vite": "^7.1.7"
   },
   "dependencies": {
+    "express": "^4.21.1",
     "mermaid": "^11.12.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "svg-pan-zoom": "^3.6.2"
+    "svg-pan-zoom": "^3.6.2",
+    "zod": "^3.23.8"
   }
 }

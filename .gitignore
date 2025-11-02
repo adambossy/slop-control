@@ -42,3 +42,6 @@ coverage/
 *.local
 Thumbs.db
 
+# Server build output
+server/dist/
+
