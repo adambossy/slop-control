@@ -1,7 +1,7 @@
 type SourceType = "local" | "github";
 
 export class SourceSelector {
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners = new Map<string, Set<Function>>();
   private current: SourceType = "local";
 
   constructor(
@@ -26,7 +26,9 @@ export class SourceSelector {
   };
 
   on(event: "sourceChange", handler: (source: SourceType) => void): void {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
     this.listeners.get(event)!.add(handler);
   }
 

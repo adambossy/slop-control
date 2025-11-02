@@ -66,8 +66,12 @@ export function parseDiff(diffText: string): ParsedDiff {
         content: line.substring(1),
       });
 
-      if (type === "addition" && currentFile) currentFile.additions++;
-      if (type === "deletion" && currentFile) currentFile.deletions++;
+      if (type === "addition" && currentFile) {
+        currentFile.additions++;
+      }
+      if (type === "deletion" && currentFile) {
+        currentFile.deletions++;
+      }
     }
   }
 

@@ -41,7 +41,9 @@ export function extractFunctions(diff: ParsedDiff): FunctionNode[] {
             const match = line.content.match(pattern.regex);
             if (match) {
               const functionName = match[1];
-              if (!functionName) continue;
+              if (!functionName) {
+                continue;
+              }
 
               const lineNumber =
                 line.type === "addition"
@@ -96,16 +98,28 @@ function countChangesInScope(
 
   for (let i = startIdx; i < hunk.lines.length && scopeDepth >= 0; i++) {
     const line = hunk.lines[i]!;
-    if (i === startIdx) inFunction = true;
+    if (i === startIdx) {
+      inFunction = true;
+    }
 
     if (inFunction) {
-      if (line.content.includes("{")) scopeDepth++;
-      if (line.content.includes("}")) scopeDepth--;
+      if (line.content.includes("{")) {
+        scopeDepth++;
+      }
+      if (line.content.includes("}")) {
+        scopeDepth--;
+      }
 
-      if (line.type === "addition") additions++;
-      if (line.type === "deletion") deletions++;
+      if (line.type === "addition") {
+        additions++;
+      }
+      if (line.type === "deletion") {
+        deletions++;
+      }
 
-      if (scopeDepth === 0 && i > startIdx) break;
+      if (scopeDepth === 0 && i > startIdx) {
+        break;
+      }
     }
   }
 

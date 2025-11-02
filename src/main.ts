@@ -82,11 +82,19 @@ class CodeReviewApp {
 
       this.sourceSelector.on("sourceChange", (source) => {
         if (source === "github") {
-          if (githubControls) githubControls.style.display = "";
-          if (fileWrapper) fileWrapper.style.display = "none";
+          if (githubControls) {
+            githubControls.style.display = "";
+          }
+          if (fileWrapper) {
+            fileWrapper.style.display = "none";
+          }
         } else {
-          if (githubControls) githubControls.style.display = "none";
-          if (fileWrapper) fileWrapper.style.display = "";
+          if (githubControls) {
+            githubControls.style.display = "none";
+          }
+          if (fileWrapper) {
+            fileWrapper.style.display = "";
+          }
         }
       });
 
@@ -105,7 +113,9 @@ class CodeReviewApp {
 
       this.githubInputs.on("branchSelected", async (branchName: string) => {
         const repoStr = repoInput.value.trim();
-        if (!repoStr) return;
+        if (!repoStr) {
+          return;
+        }
         const [owner, repo] = repoStr.split("/") as [string, string];
         try {
           // Optional: prefetch commits to assist user input later

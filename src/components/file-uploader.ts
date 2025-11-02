@@ -1,5 +1,5 @@
 export class FileUploader {
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners = new Map<string, Set<Function>>();
 
   constructor(
     private input: HTMLInputElement,
@@ -11,7 +11,9 @@ export class FileUploader {
   private setupListeners(): void {
     this.input.addEventListener("change", async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+      if (!file) {
+        return;
+      }
 
       this.label.textContent = file.name;
       const content = await file.text();

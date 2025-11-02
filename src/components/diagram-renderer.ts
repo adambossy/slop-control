@@ -4,7 +4,7 @@ import type { FunctionNode } from "@types";
 import { showLoading, showError } from "../utils/dom-helpers";
 
 export class DiagramRenderer {
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners = new Map<string, Set<Function>>();
   private functionNodes: FunctionNode[] = [];
   private initialized = false;
   private panZoom: SvgPanZoom.Instance | undefined;
@@ -215,7 +215,9 @@ export class DiagramRenderer {
   };
 
   private updateZoomPercentage(): void {
-    if (!this.zoomPercentageEl) return;
+    if (!this.zoomPercentageEl) {
+      return;
+    }
     const percent = this.panZoom
       ? Math.round(this.panZoom.getZoom() * 100)
       : 100;

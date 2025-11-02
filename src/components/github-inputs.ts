@@ -1,10 +1,17 @@
 import type { GithubClient } from "@types";
 
-type BranchItem = { name: string; commitSha: string };
-type CommitItem = { sha: string; message: string; author?: string };
+interface BranchItem {
+  name: string;
+  commitSha: string;
+}
+interface CommitItem {
+  sha: string;
+  message: string;
+  author?: string;
+}
 
 export class GithubInputs {
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners = new Map<string, Set<Function>>();
   private client: GithubClient | null = null;
 
   constructor(
@@ -26,7 +33,9 @@ export class GithubInputs {
     this.repoInput.addEventListener("blur", () => {
       const valid = this.isValidRepo(this.repoInput.value);
       this.repoInput.classList.toggle("input-error", !valid);
-      if (valid) this.emit("repoValid", this.repoInput.value);
+      if (valid) {
+        this.emit("repoValid", this.repoInput.value);
+      }
     });
 
     this.branchSelect.addEventListener("change", () => {
@@ -35,7 +44,9 @@ export class GithubInputs {
 
     this.fetchButton.addEventListener("click", () => {
       const repo = this.repoInput.value.trim();
-      if (!this.isValidRepo(repo)) return;
+      if (!this.isValidRepo(repo)) {
+        return;
+      }
       const [owner, repoName] = repo.split("/") as [string, string];
       const base = this.baseInput.value.trim();
       const head = this.headInput.value.trim();
@@ -70,7 +81,9 @@ export class GithubInputs {
     event: "repoValid" | "branchSelected" | "fetch",
     handler: (arg: any) => void,
   ): void {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
     this.listeners.get(event)!.add(handler);
   }
 

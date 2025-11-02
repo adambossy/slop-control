@@ -25,9 +25,13 @@ export function serializeKey(key: CacheKey): string {
 export function deserializeKey(keyStr: string): CacheKey | null {
   // Best-effort reverse of serializeKey; used primarily for debugging and scans
   const [namespace, resource, ownerRepo, restA, restB] = keyStr.split("|");
-  if (!namespace || !resource || !ownerRepo) return null;
+  if (!namespace || !resource || !ownerRepo) {
+    return null;
+  }
   const [owner, repo] = ownerRepo.split("/");
-  if (!owner || !repo) return null;
+  if (!owner || !repo) {
+    return null;
+  }
 
   if (resource === "compare") {
     const [base, head] = (restA || "").split("...");
@@ -66,14 +70,18 @@ export function isStale<T>(
   entry: CacheEntry<T> | null,
   nowMs: number = Date.now(),
 ): boolean {
-  if (!entry) return true;
-  if (entry.meta.ttlMs == null) return false; // immutable entries
+  if (!entry) {
+    return true;
+  }
+  if (entry.meta.ttlMs == null) {
+    return false;
+  } // immutable entries
   return nowMs - entry.meta.createdAt > entry.meta.ttlMs;
 }
 
 // In-memory LRU cache for fast access
 class MemoryLru {
-  private map: Map<string, CacheEntry<unknown>> = new Map();
+  private map = new Map<string, CacheEntry<unknown>>();
   private readonly capacity: number;
 
   constructor(capacity: number) {
@@ -92,11 +100,15 @@ class MemoryLru {
   }
 
   set<T>(key: string, value: CacheEntry<T>): void {
-    if (this.map.has(key)) this.map.delete(key);
+    if (this.map.has(key)) {
+      this.map.delete(key);
+    }
     this.map.set(key, value);
     if (this.map.size > this.capacity) {
       const firstKey = this.map.keys().next().value as string | undefined;
-      if (firstKey) this.map.delete(firstKey);
+      if (firstKey) {
+        this.map.delete(firstKey);
+      }
     }
   }
 
@@ -120,7 +132,9 @@ class IdxStore {
   private dbPromise: Promise<IDBDatabase> | null = null;
 
   private async open(): Promise<IDBDatabase> {
-    if (this.dbPromise) return this.dbPromise;
+    if (this.dbPromise) {
+      return this.dbPromise;
+    }
     if (!("indexedDB" in window)) {
       // Fallback: reject to signal unavailability
       return Promise.reject(new Error("IndexedDB not available"));
@@ -221,7 +235,7 @@ export class GithubRepoCache implements RepoCache {
   private readonly memory: MemoryLru;
   private readonly persistent: IdxStore;
 
-  constructor(capacity: number = 100) {
+  constructor(capacity = 100) {
     this.memory = new MemoryLru(capacity);
     this.persistent = new IdxStore();
   }
@@ -229,9 +243,13 @@ export class GithubRepoCache implements RepoCache {
   async get<T>(key: CacheKey): Promise<CacheEntry<T> | null> {
     const k = serializeKey(key);
     const fromMem = this.memory.get<T>(k);
-    if (fromMem) return fromMem;
+    if (fromMem) {
+      return fromMem;
+    }
     const fromDb = await this.persistent.get<T>(k);
-    if (fromDb) this.memory.set(k, fromDb);
+    if (fromDb) {
+      this.memory.set(k, fromDb);
+    }
     return fromDb;
   }
 
@@ -243,7 +261,9 @@ export class GithubRepoCache implements RepoCache {
 
   async has(key: CacheKey): Promise<boolean> {
     const k = serializeKey(key);
-    if (this.memory.has(k)) return true;
+    if (this.memory.has(k)) {
+      return true;
+    }
     const existing = await this.persistent.get(k);
     return existing != null;
   }

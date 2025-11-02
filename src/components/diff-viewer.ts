@@ -3,7 +3,7 @@ import { escapeHtml } from "../utils/escape-html";
 import { showEmptyState } from "../utils/dom-helpers";
 
 export class DiffViewer {
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners = new Map<string, Set<Function>>();
 
   constructor(private container: HTMLElement) {
     this.setupTextSelectionHandler();
@@ -58,8 +58,12 @@ export class DiffViewer {
 
     for (let i = 0; i < startIdx; i++) {
       const line = targetHunk.lines[i]!;
-      if (line.type === "deletion" || line.type === "context") oldLine++;
-      if (line.type === "addition" || line.type === "context") newLine++;
+      if (line.type === "deletion" || line.type === "context") {
+        oldLine++;
+      }
+      if (line.type === "addition" || line.type === "context") {
+        newLine++;
+      }
     }
 
     for (let i = startIdx; i < endIdx; i++) {

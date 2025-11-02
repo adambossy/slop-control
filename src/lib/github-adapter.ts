@@ -17,7 +17,9 @@ function buildUrl(
   const url = new URL(path, GITHUB_API_BASE);
   if (params) {
     for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+      if (v !== undefined && v !== null) {
+        url.searchParams.set(k, String(v));
+      }
     }
   }
   return url.toString();
@@ -58,7 +60,7 @@ export class GithubAdapter implements GithubClient {
     repo: string;
     per_page?: number;
   }): Promise<{
-    branches: Array<{ name: string; commitSha: string }>;
+    branches: { name: string; commitSha: string }[];
     fromCache: boolean;
   }> {
     const { owner, repo, per_page = 100 } = args;
@@ -69,7 +71,7 @@ export class GithubAdapter implements GithubClient {
       repo,
     };
     const cached =
-      await this.cache.get<Array<{ name: string; commitSha: string }>>(key);
+      await this.cache.get<{ name: string; commitSha: string }[]>(key);
     if (cached) {
       this.revalidateBranches(key, owner, repo, per_page, cached.meta);
       return { branches: cached.data, fromCache: true };
@@ -80,9 +82,10 @@ export class GithubAdapter implements GithubClient {
       headers: { Accept: "application/vnd.github+json" },
     });
     this.rateLimit = updateRateLimit(this.rateLimit, res.headers);
-    if (!res.ok) throw new Error(`GitHub branches failed: ${res.status}`);
-    const json: Array<{ name: string; commit: { sha: string } }> =
-      await res.json();
+    if (!res.ok) {
+      throw new Error(`GitHub branches failed: ${res.status}`);
+    }
+    const json: { name: string; commit: { sha: string } }[] = await res.json();
     const branches = json.map((b) => ({
       name: b.name,
       commitSha: b.commit.sha,
@@ -110,18 +113,28 @@ export class GithubAdapter implements GithubClient {
     meta: CacheEntry<unknown>["meta"],
   ): Promise<void> {
     // Skip if close to rate limit
-    if (this.rateLimit && this.rateLimit.remaining <= 1) return;
+    if (this.rateLimit && this.rateLimit.remaining <= 1) {
+      return;
+    }
     const url = buildUrl(`/repos/${owner}/${repo}/branches`, { per_page });
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
     };
-    if (meta.etag) headers["If-None-Match"] = meta.etag;
-    if (meta.lastModified) headers["If-Modified-Since"] = meta.lastModified;
+    if (meta.etag) {
+      headers["If-None-Match"] = meta.etag;
+    }
+    if (meta.lastModified) {
+      headers["If-Modified-Since"] = meta.lastModified;
+    }
     void fetch(url, { headers }).then(async (res) => {
       this.rateLimit = updateRateLimit(this.rateLimit, res.headers);
-      if (res.status === 304) return;
-      if (!res.ok) return;
-      const json: Array<{ name: string; commit: { sha: string } }> =
+      if (res.status === 304) {
+        return;
+      }
+      if (!res.ok) {
+        return;
+      }
+      const json: { name: string; commit: { sha: string } }[] =
         await res.json();
       const branches = json.map((b) => ({
         name: b.name,
@@ -148,7 +161,7 @@ export class GithubAdapter implements GithubClient {
     sha: string;
     per_page?: number;
   }): Promise<{
-    commits: Array<{ sha: string; message: string; author?: string }>;
+    commits: { sha: string; message: string; author?: string }[];
     fromCache: boolean;
   }> {
     const { owner, repo, sha, per_page = 100 } = args;
@@ -160,9 +173,9 @@ export class GithubAdapter implements GithubClient {
       branch: sha,
     };
     const cached =
-      await this.cache.get<
-        Array<{ sha: string; message: string; author?: string }>
-      >(key);
+      await this.cache.get<{ sha: string; message: string; author?: string }[]>(
+        key,
+      );
     if (cached) {
       this.revalidateCommits(key, owner, repo, sha, per_page, cached.meta);
       return { commits: cached.data, fromCache: true };
@@ -173,11 +186,13 @@ export class GithubAdapter implements GithubClient {
       headers: { Accept: "application/vnd.github+json" },
     });
     this.rateLimit = updateRateLimit(this.rateLimit, res.headers);
-    if (!res.ok) throw new Error(`GitHub commits failed: ${res.status}`);
-    const json: Array<{
+    if (!res.ok) {
+      throw new Error(`GitHub commits failed: ${res.status}`);
+    }
+    const json: {
       sha: string;
       commit: { message: string; author?: { name: string } };
-    }> = await res.json();
+    }[] = await res.json();
     const commits = json.map((c) => ({
       sha: c.sha,
       message: c.commit.message,
@@ -206,21 +221,31 @@ export class GithubAdapter implements GithubClient {
     per_page: number,
     meta: CacheEntry<unknown>["meta"],
   ): Promise<void> {
-    if (this.rateLimit && this.rateLimit.remaining <= 1) return;
+    if (this.rateLimit && this.rateLimit.remaining <= 1) {
+      return;
+    }
     const url = buildUrl(`/repos/${owner}/${repo}/commits`, { sha, per_page });
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
     };
-    if (meta.etag) headers["If-None-Match"] = meta.etag;
-    if (meta.lastModified) headers["If-Modified-Since"] = meta.lastModified;
+    if (meta.etag) {
+      headers["If-None-Match"] = meta.etag;
+    }
+    if (meta.lastModified) {
+      headers["If-Modified-Since"] = meta.lastModified;
+    }
     void fetch(url, { headers }).then(async (res) => {
       this.rateLimit = updateRateLimit(this.rateLimit, res.headers);
-      if (res.status === 304) return;
-      if (!res.ok) return;
-      const json: Array<{
+      if (res.status === 304) {
+        return;
+      }
+      if (!res.ok) {
+        return;
+      }
+      const json: {
         sha: string;
         commit: { message: string; author?: { name: string } };
-      }> = await res.json();
+      }[] = await res.json();
       const commits = json.map((c) => ({
         sha: c.sha,
         message: c.commit.message,
@@ -267,7 +292,9 @@ export class GithubAdapter implements GithubClient {
       headers: { Accept: "application/vnd.github+json" },
     });
     this.rateLimit = updateRateLimit(this.rateLimit, res.headers);
-    if (!res.ok) throw new Error(`GitHub compare failed: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`GitHub compare failed: ${res.status}`);
+    }
     const json: GithubCompareResponse = await res.json();
     const unified = (json.files ?? [])
       .map((f) => toUnifiedDiff(f.filename, f.patch))
@@ -305,12 +332,16 @@ export class GithubAdapter implements GithubClient {
       path,
     };
     const cached = await this.cache.get<string>(key);
-    if (cached) return { content: cached.data, fromCache: true };
+    if (cached) {
+      return { content: cached.data, fromCache: true };
+    }
 
     const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`;
     const res = await fetch(url, { headers: { Accept: "text/plain" } });
     this.rateLimit = updateRateLimit(this.rateLimit, res.headers);
-    if (!res.ok) throw new Error(`GitHub raw failed: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`GitHub raw failed: ${res.status}`);
+    }
     const text = await res.text();
     const entry: CacheEntry<string> = {
       data: text,
