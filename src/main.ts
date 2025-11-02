@@ -125,7 +125,7 @@ class CodeReviewApp {
             sha: branchName,
             per_page: 50,
           });
-        } catch (e) {
+        } catch {
           // non-fatal
         }
       });

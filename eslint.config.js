@@ -34,7 +34,10 @@ export default tseslint.config(
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],
       "no-var": "error",
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
       "@typescript-eslint/consistent-type-imports": "warn",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
