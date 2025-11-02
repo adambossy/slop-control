@@ -83,7 +83,7 @@ export interface GithubClient {
     repo: string;
     per_page?: number;
   }): Promise<{
-    branches: { name: string; commitSha: string }[];
+    branches: Array<{ name: string; commitSha: string }>;
     fromCache: boolean;
   }>;
 
@@ -93,7 +93,7 @@ export interface GithubClient {
     sha: string; // branch name or SHA
     per_page?: number;
   }): Promise<{
-    commits: { sha: string; message: string; author?: string }[];
+    commits: Array<{ sha: string; message: string; author?: string }>;
     fromCache: boolean;
   }>;
 

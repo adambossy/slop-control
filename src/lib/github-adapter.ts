@@ -60,7 +60,7 @@ export class GithubAdapter implements GithubClient {
     repo: string;
     per_page?: number;
   }): Promise<{
-    branches: { name: string; commitSha: string }[];
+    branches: Array<{ name: string; commitSha: string }>;
     fromCache: boolean;
   }> {
     const { owner, repo, per_page = 100 } = args;
@@ -71,7 +71,7 @@ export class GithubAdapter implements GithubClient {
       repo,
     };
     const cached =
-      await this.cache.get<{ name: string; commitSha: string }[]>(key);
+      await this.cache.get<Array<{ name: string; commitSha: string }>>(key);
     if (cached) {
       this.revalidateBranches(key, owner, repo, per_page, cached.meta);
       return { branches: cached.data, fromCache: true };
@@ -85,7 +85,8 @@ export class GithubAdapter implements GithubClient {
     if (!res.ok) {
       throw new Error(`GitHub branches failed: ${res.status}`);
     }
-    const json: { name: string; commit: { sha: string } }[] = await res.json();
+    const json: Array<{ name: string; commit: { sha: string } }> =
+      await res.json();
     const branches = json.map((b) => ({
       name: b.name,
       commitSha: b.commit.sha,
@@ -134,7 +135,7 @@ export class GithubAdapter implements GithubClient {
       if (!res.ok) {
         return;
       }
-      const json: { name: string; commit: { sha: string } }[] =
+      const json: Array<{ name: string; commit: { sha: string } }> =
         await res.json();
       const branches = json.map((b) => ({
         name: b.name,
@@ -161,7 +162,7 @@ export class GithubAdapter implements GithubClient {
     sha: string;
     per_page?: number;
   }): Promise<{
-    commits: { sha: string; message: string; author?: string }[];
+    commits: Array<{ sha: string; message: string; author?: string }>;
     fromCache: boolean;
   }> {
     const { owner, repo, sha, per_page = 100 } = args;
@@ -173,9 +174,9 @@ export class GithubAdapter implements GithubClient {
       branch: sha,
     };
     const cached =
-      await this.cache.get<{ sha: string; message: string; author?: string }[]>(
-        key,
-      );
+      await this.cache.get<
+        Array<{ sha: string; message: string; author?: string }>
+      >(key);
     if (cached) {
       this.revalidateCommits(key, owner, repo, sha, per_page, cached.meta);
       return { commits: cached.data, fromCache: true };
@@ -189,10 +190,10 @@ export class GithubAdapter implements GithubClient {
     if (!res.ok) {
       throw new Error(`GitHub commits failed: ${res.status}`);
     }
-    const json: {
+    const json: Array<{
       sha: string;
       commit: { message: string; author?: { name: string } };
-    }[] = await res.json();
+    }> = await res.json();
     const commits = json.map((c) => ({
       sha: c.sha,
       message: c.commit.message,
@@ -242,10 +243,10 @@ export class GithubAdapter implements GithubClient {
       if (!res.ok) {
         return;
       }
-      const json: {
+      const json: Array<{
         sha: string;
         commit: { message: string; author?: { name: string } };
-      }[] = await res.json();
+      }> = await res.json();
       const commits = json.map((c) => ({
         sha: c.sha,
         message: c.commit.message,
