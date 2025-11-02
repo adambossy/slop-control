@@ -32,7 +32,7 @@ export default tseslint.config(
       "no-console": "off",
       "no-debugger": "warn",
       eqeqeq: ["error", "always"],
-      curly: ["error", "multi-line"],
+      curly: ["error", "all"],
       "no-var": "error",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/consistent-type-imports": "warn",

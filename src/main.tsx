@@ -9,7 +9,9 @@ function ResizableTwoColumnLayout(): React.ReactElement {
 
   useEffect(() => {
     function handleMouseMove(event: MouseEvent): void {
-      if (!draggingRef.current || !containerRef.current) return;
+      if (!draggingRef.current || !containerRef.current) {
+        return;
+      }
       const rect = containerRef.current.getBoundingClientRect();
       const offsetX = event.clientX - rect.left;
       const pct = (offsetX / rect.width) * 100;
@@ -19,7 +21,9 @@ function ResizableTwoColumnLayout(): React.ReactElement {
     }
 
     function handleMouseUp(): void {
-      if (!draggingRef.current) return;
+      if (!draggingRef.current) {
+        return;
+      }
       draggingRef.current = false;
       document.body.style.cursor = "";
       (document.body.style as any).userSelect = "";
