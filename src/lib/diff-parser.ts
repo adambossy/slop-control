@@ -10,8 +10,8 @@ export function parseDiff(diffText: string): ParsedDiff {
   let currentFile: DiffFile | null = null;
   let currentHunk: Hunk | null = null;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? "";
+  for (const rawLine of lines) {
+    const line = rawLine ?? "";
 
     // New file
     if (line.startsWith("diff --git")) {

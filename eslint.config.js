@@ -39,7 +39,7 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
       "@typescript-eslint/no-unsafe-function-type": "off",
-      "@typescript-eslint/prefer-for-of": "off",
+      "@typescript-eslint/prefer-for-of": "error",
     },
   },
   // Node/TS override for server TypeScript and TS config files
