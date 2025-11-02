@@ -29,7 +29,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      "no-console": "off",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-debugger": "warn",
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],

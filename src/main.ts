@@ -183,7 +183,7 @@ class CodeReviewApp {
     void this.currentFile;
 
     this.setupEventHandlers();
-    console.log("Code Review Tool initialized");
+    console.warn("Code Review Tool initialized");
   }
 
   private setupEventHandlers(): void {
@@ -203,15 +203,15 @@ class CodeReviewApp {
   private async handleFileLoad(content: string): Promise<void> {
     try {
       this.parsedDiff = parseDiff(content);
-      console.log("Parsed diff:", this.parsedDiff);
-      console.log("Files found:", this.parsedDiff.files.length);
+      console.warn("Parsed diff:", this.parsedDiff);
+      console.warn("Files found:", this.parsedDiff.files.length);
 
       const functions = extractFunctions(this.parsedDiff);
-      console.log("Functions found:", functions.length);
-      console.log("Functions:", functions);
+      console.warn("Functions found:", functions.length);
+      console.warn("Functions:", functions);
 
       const diagramCode = generateMermaidDiagram(functions, this.parsedDiff);
-      console.log("Mermaid diagram:", diagramCode);
+      console.warn("Mermaid diagram:", diagramCode);
       await this.diagram.render(functions, diagramCode);
     } catch (error) {
       console.error("Error parsing diff:", error);
@@ -224,15 +224,15 @@ class CodeReviewApp {
   ): Promise<void> {
     try {
       this.parsedDiff = parseDiff(content);
-      console.log("Parsed diff:", this.parsedDiff);
-      console.log("Files found:", this.parsedDiff.files.length);
+      console.warn("Parsed diff:", this.parsedDiff);
+      console.warn("Files found:", this.parsedDiff.files.length);
 
       const functions = extractFunctions(this.parsedDiff);
-      console.log("Functions found:", functions.length);
-      console.log("Functions:", functions);
+      console.warn("Functions found:", functions.length);
+      console.warn("Functions:", functions);
 
       const diagramCode = generateMermaidDiagram(functions, this.parsedDiff);
-      console.log("Mermaid diagram:", diagramCode);
+      console.warn("Mermaid diagram:", diagramCode);
       await this.diagram.render(functions, diagramCode);
     } catch (error) {
       console.error("Error parsing diff:", error);
@@ -240,7 +240,7 @@ class CodeReviewApp {
   }
 
   private handleNodeClick(funcNode: FunctionNode): void {
-    console.log("Node clicked:", funcNode);
+    console.warn("Node clicked:", funcNode);
     const file = this.parsedDiff?.files.find(
       (f: DiffFile) =>
         f.newPath === funcNode.file || f.oldPath === funcNode.file,
