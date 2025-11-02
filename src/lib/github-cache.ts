@@ -73,7 +73,7 @@ export function isStale<T>(
   if (!entry) {
     return true;
   }
-  if (entry.meta.ttlMs == null) {
+  if (entry.meta.ttlMs === null || entry.meta.ttlMs === undefined) {
     return false;
   } // immutable entries
   return nowMs - entry.meta.createdAt > entry.meta.ttlMs;
@@ -265,7 +265,7 @@ export class GithubRepoCache implements RepoCache {
       return true;
     }
     const existing = await this.persistent.get(k);
-    return existing != null;
+    return existing !== null && existing !== undefined;
   }
 
   async invalidate(key: CacheKey): Promise<void> {

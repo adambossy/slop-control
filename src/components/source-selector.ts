@@ -32,6 +32,10 @@ export class SourceSelector {
     this.listeners.get(event)!.add(handler);
   }
 
+  private emit(event: string, ...args: any[]): void {
+    this.listeners.get(event)?.forEach((h) => h(...args));
+  }
+
   getSource(): SourceType {
     return this.current;
   }

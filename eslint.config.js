@@ -31,7 +31,7 @@ export default tseslint.config(
     rules: {
       "no-console": "off",
       "no-debugger": "warn",
-      eqeqeq: "off",
+      eqeqeq: ["error", "always"],
       curly: ["error", "multi-line"],
       "no-var": "error",
       "@typescript-eslint/no-unused-vars": "off",

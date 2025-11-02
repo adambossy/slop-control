@@ -6,7 +6,7 @@ import type {
   CacheKey,
   RateLimitInfo,
 } from "@types";
-import { GithubRepoCache, serializeKey } from "./github-cache";
+import { GithubRepoCache } from "./github-cache";
 
 const GITHUB_API_BASE = "https://api.github.com";
 

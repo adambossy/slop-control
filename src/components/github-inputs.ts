@@ -27,6 +27,7 @@ export class GithubInputs {
   // Inject client for convenience (optional). Network calls are orchestrated by main controller.
   setClient(client: GithubClient): void {
     this.client = client;
+    void this.client;
   }
 
   private attachHandlers(): void {

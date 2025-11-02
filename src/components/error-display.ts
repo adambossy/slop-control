@@ -42,7 +42,7 @@ export class ErrorDisplay {
   }
 
   private clearTimer(): void {
-    if (this.countdownTimer != null) {
+    if (this.countdownTimer !== null) {
       clearInterval(this.countdownTimer);
       this.countdownTimer = null;
     }
