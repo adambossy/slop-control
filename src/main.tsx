@@ -48,7 +48,7 @@ function ResizableTwoColumnLayout(): React.ReactElement {
         ref={containerRef}
         style={{
           display: 'grid',
-          gridTemplateColumns: `${leftPercentage}% 6px ${100 - leftPercentage}%`,
+          gridTemplateColumns: `${leftPercentage}% 4px ${100 - leftPercentage}%`,
           gap: 0,
           flex: 1,
           minHeight: 0,
