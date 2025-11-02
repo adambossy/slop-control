@@ -3,23 +3,23 @@ export class FileUploader {
 
   constructor(
     private input: HTMLInputElement,
-    private label: HTMLElement
+    private label: HTMLElement,
   ) {
     this.setupListeners();
   }
 
   private setupListeners(): void {
-    this.input.addEventListener('change', async (e) => {
+    this.input.addEventListener("change", async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
       this.label.textContent = file.name;
       const content = await file.text();
-      this.emit('fileLoaded', content);
+      this.emit("fileLoaded", content);
     });
   }
 
-  on(event: 'fileLoaded', handler: (content: string) => void): void {
+  on(event: "fileLoaded", handler: (content: string) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -34,4 +34,3 @@ export class FileUploader {
     this.listeners.clear();
   }
 }
-

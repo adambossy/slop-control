@@ -1,4 +1,5 @@
 <!-- 89284e07-43bf-4c87-baa9-b72108fa1853 921cd220-a86f-4482-bd7d-1d9753f5946c -->
+
 # GitHub Diff Ingestion Implementation
 
 ## Overview
@@ -35,19 +36,19 @@ export interface GithubCompareResponse {
 }
 
 // Cache system types (from spec lines 72-108)
-export type GithubResource = 'branches' | 'commits' | 'compare' | 'raw';
+export type GithubResource = "branches" | "commits" | "compare" | "raw";
 
 export interface CacheKey {
-  namespace: string;         // e.g., 'github:v1'
+  namespace: string; // e.g., 'github:v1'
   resource: GithubResource;
   owner: string;
   repo: string;
   branch?: string;
-  sha?: string;              // for commit alias
-  base?: string;             // base SHA
-  head?: string;             // head SHA
-  ref?: string;              // for raw
-  path?: string;             // for raw
+  sha?: string; // for commit alias
+  base?: string; // base SHA
+  head?: string; // head SHA
+  ref?: string; // for raw
+  path?: string; // for raw
 }
 
 export interface CacheEntry<T> {
@@ -55,11 +56,11 @@ export interface CacheEntry<T> {
   meta: {
     etag?: string;
     lastModified?: string;
-    createdAt: number;       // ms epoch
-    ttlMs?: number;          // only for mutable resources
+    createdAt: number; // ms epoch
+    ttlMs?: number; // only for mutable resources
     url?: string;
     params?: Record<string, string>;
-    schemaVersion: string;   // e.g., 'v1'
+    schemaVersion: string; // e.g., 'v1'
     sizeBytes?: number;
   };
 }
@@ -74,26 +75,43 @@ export interface RepoCache {
 
 // Client interface (from spec lines 110-128)
 export interface GithubClient {
-  listBranches(args: { owner: string; repo: string; per_page?: number }): Promise<
-    { branches: Array<{ name: string; commitSha: string }>; fromCache: boolean }
-  >;
+  listBranches(args: {
+    owner: string;
+    repo: string;
+    per_page?: number;
+  }): Promise<{
+    branches: Array<{ name: string; commitSha: string }>;
+    fromCache: boolean;
+  }>;
 
-  listCommits(args: { owner: string; repo: string; sha: string; per_page?: number }): Promise<
-    { commits: Array<{ sha: string; message: string; author?: string }>; fromCache: boolean }
-  >;
+  listCommits(args: {
+    owner: string;
+    repo: string;
+    sha: string;
+    per_page?: number;
+  }): Promise<{
+    commits: Array<{ sha: string; message: string; author?: string }>;
+    fromCache: boolean;
+  }>;
 
-  compare(args: { owner: string; repo: string; base: string; head: string }): Promise<
-    { diff: string; fromCache: boolean }  // diff is unified diff format string
-  >;
+  compare(args: {
+    owner: string;
+    repo: string;
+    base: string;
+    head: string;
+  }): Promise<{ diff: string; fromCache: boolean }>; // diff is unified diff format string
 
-  getRaw(args: { owner: string; repo: string; ref: string; path: string }): Promise<
-    { content: string; fromCache: boolean }
-  >;
+  getRaw(args: {
+    owner: string;
+    repo: string;
+    ref: string;
+    path: string;
+  }): Promise<{ content: string; fromCache: boolean }>;
 }
 
 export interface RateLimitInfo {
   remaining: number;
-  reset: number;  // epoch timestamp
+  reset: number; // epoch timestamp
   limit: number;
 }
 ```
@@ -202,7 +220,7 @@ private async handleDiffLoad(content: string, source: 'local' | 'github'): Promi
 
 - **Loading states:** Show spinners during API calls
 - **Empty states:** Display helpful messages when no diffs found
-- **Rate limit handling:** 
+- **Rate limit handling:**
   - Monitor `x-ratelimit-remaining` header
   - Show countdown when limited
   - Prefer cache when approaching limit
@@ -214,7 +232,7 @@ private async handleDiffLoad(content: string, source: 'local' | 'github'): Promi
 Create test fixtures in `tests/fixtures/github/`:
 
 - `branches.json` - Sample branch list response
-- `commits.json` - Sample commit list response  
+- `commits.json` - Sample commit list response
 - `compare.json` - Sample compare API response
 - `unified-diff.txt` - Expected unified diff output
 

@@ -1,7 +1,7 @@
-import mermaid from 'mermaid';
-import svgPanZoom from 'svg-pan-zoom';
-import type { FunctionNode } from '@types';
-import { showLoading, showError } from '../utils/dom-helpers';
+import mermaid from "mermaid";
+import svgPanZoom from "svg-pan-zoom";
+import type { FunctionNode } from "@types";
+import { showLoading, showError } from "../utils/dom-helpers";
 
 export class DiagramRenderer {
   private listeners: Map<string, Set<Function>> = new Map();
@@ -21,16 +21,16 @@ export class DiagramRenderer {
   private initMermaid(): void {
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: "dark",
       themeVariables: {
         darkMode: true,
-        background: '#1e1e1e',
-        primaryColor: '#0e639c',
-        primaryTextColor: '#d4d4d4',
-        primaryBorderColor: '#3e3e42',
-        lineColor: '#858585',
-        secondaryColor: '#2d2d30',
-        tertiaryColor: '#1e1e1e',
+        background: "#1e1e1e",
+        primaryColor: "#0e639c",
+        primaryTextColor: "#d4d4d4",
+        primaryBorderColor: "#3e3e42",
+        lineColor: "#858585",
+        secondaryColor: "#2d2d30",
+        tertiaryColor: "#1e1e1e",
       },
     });
     this.initialized = true;
@@ -42,24 +42,24 @@ export class DiagramRenderer {
     }
 
     this.functionNodes = functions;
-    showLoading(this.container, 'Rendering diagram...');
+    showLoading(this.container, "Rendering diagram...");
 
     try {
-      const { svg } = await mermaid.render('diagram', diagramCode);
+      const { svg } = await mermaid.render("diagram", diagramCode);
       this.container.innerHTML = svg;
       this.ensureControlsInitialized();
-      const svgEl = this.container.querySelector('svg') as SVGSVGElement | null;
+      const svgEl = this.container.querySelector("svg") as SVGSVGElement | null;
       if (svgEl) {
         this.attachPanZoom(svgEl);
       }
       this.attachClickHandlers();
     } catch (error) {
-      console.error('Error rendering diagram:', error);
-      showError(this.container, 'Failed to render diagram');
+      console.error("Error rendering diagram:", error);
+      showError(this.container, "Failed to render diagram");
     }
   }
 
-  on(event: 'nodeClick', handler: (funcNode: FunctionNode) => void): void {
+  on(event: "nodeClick", handler: (funcNode: FunctionNode) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -71,17 +71,17 @@ export class DiagramRenderer {
   }
 
   private attachClickHandlers(): void {
-    const nodes = this.container.querySelectorAll('.node');
+    const nodes = this.container.querySelectorAll(".node");
 
     nodes.forEach((node, index) => {
-      (node as HTMLElement).style.cursor = 'pointer';
+      (node as HTMLElement).style.cursor = "pointer";
 
-      node.addEventListener('click', () => {
-        nodes.forEach((n) => n.classList.remove('node-highlight'));
-        node.classList.add('node-highlight');
+      node.addEventListener("click", () => {
+        nodes.forEach((n) => n.classList.remove("node-highlight"));
+        node.classList.add("node-highlight");
 
         if (this.functionNodes[index]) {
-          this.emit('nodeClick', this.functionNodes[index]);
+          this.emit("nodeClick", this.functionNodes[index]);
         }
       });
     });
@@ -91,7 +91,7 @@ export class DiagramRenderer {
     this.listeners.clear();
     this.teardownPanZoom();
     this.teardownControls();
-    this.container.innerHTML = '';
+    this.container.innerHTML = "";
   }
 
   private attachPanZoom(svgEl: SVGSVGElement): void {
@@ -127,7 +127,7 @@ export class DiagramRenderer {
           this.updateZoomPercentage();
         }
       };
-      window.addEventListener('resize', this.onResizeHandler);
+      window.addEventListener("resize", this.onResizeHandler);
     }
   }
 
@@ -137,7 +137,7 @@ export class DiagramRenderer {
       this.panZoom = undefined;
     }
     if (this.onResizeHandler) {
-      window.removeEventListener('resize', this.onResizeHandler);
+      window.removeEventListener("resize", this.onResizeHandler);
       this.onResizeHandler = null;
     }
   }
@@ -152,19 +152,25 @@ export class DiagramRenderer {
       return;
     }
 
-    this.zoomInBtn = document.getElementById('diagram-zoom-in') as HTMLButtonElement | null;
-    this.zoomOutBtn = document.getElementById('diagram-zoom-out') as HTMLButtonElement | null;
-    this.resetBtn = document.getElementById('diagram-zoom-reset') as HTMLButtonElement | null;
-    this.zoomPercentageEl = document.getElementById('diagram-zoom-percentage');
+    this.zoomInBtn = document.getElementById(
+      "diagram-zoom-in",
+    ) as HTMLButtonElement | null;
+    this.zoomOutBtn = document.getElementById(
+      "diagram-zoom-out",
+    ) as HTMLButtonElement | null;
+    this.resetBtn = document.getElementById(
+      "diagram-zoom-reset",
+    ) as HTMLButtonElement | null;
+    this.zoomPercentageEl = document.getElementById("diagram-zoom-percentage");
 
     if (this.zoomInBtn) {
-      this.zoomInBtn.addEventListener('click', this.handleZoomInClick);
+      this.zoomInBtn.addEventListener("click", this.handleZoomInClick);
     }
     if (this.zoomOutBtn) {
-      this.zoomOutBtn.addEventListener('click', this.handleZoomOutClick);
+      this.zoomOutBtn.addEventListener("click", this.handleZoomOutClick);
     }
     if (this.resetBtn) {
-      this.resetBtn.addEventListener('click', this.handleResetClick);
+      this.resetBtn.addEventListener("click", this.handleResetClick);
     }
 
     // Initialize visible percentage
@@ -173,13 +179,13 @@ export class DiagramRenderer {
 
   private teardownControls(): void {
     if (this.zoomInBtn) {
-      this.zoomInBtn.removeEventListener('click', this.handleZoomInClick);
+      this.zoomInBtn.removeEventListener("click", this.handleZoomInClick);
     }
     if (this.zoomOutBtn) {
-      this.zoomOutBtn.removeEventListener('click', this.handleZoomOutClick);
+      this.zoomOutBtn.removeEventListener("click", this.handleZoomOutClick);
     }
     if (this.resetBtn) {
-      this.resetBtn.removeEventListener('click', this.handleResetClick);
+      this.resetBtn.removeEventListener("click", this.handleResetClick);
     }
     this.zoomInBtn = null;
     this.zoomOutBtn = null;
@@ -210,8 +216,9 @@ export class DiagramRenderer {
 
   private updateZoomPercentage(): void {
     if (!this.zoomPercentageEl) return;
-    const percent = this.panZoom ? Math.round(this.panZoom.getZoom() * 100) : 100;
+    const percent = this.panZoom
+      ? Math.round(this.panZoom.getZoom() * 100)
+      : 100;
     this.zoomPercentageEl.textContent = `${percent}%`;
   }
 }
-

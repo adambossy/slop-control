@@ -1,22 +1,22 @@
-import type { CacheEntry, CacheKey, RepoCache } from '@types';
+import type { CacheEntry, CacheKey, RepoCache } from "@types";
 
 // Utilities for cache key serialization and staleness checks
 
 export function serializeKey(key: CacheKey): string {
   const base = `${key.namespace}|${key.resource}|${key.owner}/${key.repo}`;
   switch (key.resource) {
-    case 'compare': {
-      const baseSha = key.base ?? '';
-      const headSha = key.head ?? '';
+    case "compare": {
+      const baseSha = key.base ?? "";
+      const headSha = key.head ?? "";
       return `${base}|${baseSha}...${headSha}`;
     }
-    case 'commits': {
-      return `${base}|${key.branch ?? ''}`;
+    case "commits": {
+      return `${base}|${key.branch ?? ""}`;
     }
-    case 'raw': {
-      return `${base}|${key.ref ?? ''}|${key.path ?? ''}`;
+    case "raw": {
+      return `${base}|${key.ref ?? ""}|${key.path ?? ""}`;
     }
-    case 'branches':
+    case "branches":
     default:
       return base;
   }
@@ -24,25 +24,48 @@ export function serializeKey(key: CacheKey): string {
 
 export function deserializeKey(keyStr: string): CacheKey | null {
   // Best-effort reverse of serializeKey; used primarily for debugging and scans
-  const [namespace, resource, ownerRepo, restA, restB] = keyStr.split('|');
+  const [namespace, resource, ownerRepo, restA, restB] = keyStr.split("|");
   if (!namespace || !resource || !ownerRepo) return null;
-  const [owner, repo] = ownerRepo.split('/');
+  const [owner, repo] = ownerRepo.split("/");
   if (!owner || !repo) return null;
 
-  if (resource === 'compare') {
-    const [base, head] = (restA || '').split('...');
-    return { namespace, resource: 'compare', owner, repo, base, head } as CacheKey;
+  if (resource === "compare") {
+    const [base, head] = (restA || "").split("...");
+    return {
+      namespace,
+      resource: "compare",
+      owner,
+      repo,
+      base,
+      head,
+    } as CacheKey;
   }
-  if (resource === 'commits') {
-    return { namespace, resource: 'commits', owner, repo, branch: restA } as CacheKey;
+  if (resource === "commits") {
+    return {
+      namespace,
+      resource: "commits",
+      owner,
+      repo,
+      branch: restA,
+    } as CacheKey;
   }
-  if (resource === 'raw') {
-    return { namespace, resource: 'raw', owner, repo, ref: restA, path: restB } as CacheKey;
+  if (resource === "raw") {
+    return {
+      namespace,
+      resource: "raw",
+      owner,
+      repo,
+      ref: restA,
+      path: restB,
+    } as CacheKey;
   }
-  return { namespace, resource: 'branches', owner, repo } as CacheKey;
+  return { namespace, resource: "branches", owner, repo } as CacheKey;
 }
 
-export function isStale<T>(entry: CacheEntry<T> | null, nowMs: number = Date.now()): boolean {
+export function isStale<T>(
+  entry: CacheEntry<T> | null,
+  nowMs: number = Date.now(),
+): boolean {
   if (!entry) return true;
   if (entry.meta.ttlMs == null) return false; // immutable entries
   return nowMs - entry.meta.createdAt > entry.meta.ttlMs;
@@ -92,23 +115,25 @@ class MemoryLru {
 
 // IndexedDB wrapper for persistence
 class IdxStore {
-  private readonly dbName = 'githubCacheDb';
-  private readonly storeName = 'entries';
+  private readonly dbName = "githubCacheDb";
+  private readonly storeName = "entries";
   private dbPromise: Promise<IDBDatabase> | null = null;
 
   private async open(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
-    if (!('indexedDB' in window)) {
+    if (!("indexedDB" in window)) {
       // Fallback: reject to signal unavailability
-      return Promise.reject(new Error('IndexedDB not available'));
+      return Promise.reject(new Error("IndexedDB not available"));
     }
     this.dbPromise = new Promise((resolve, reject) => {
       const req = indexedDB.open(this.dbName, 1);
       req.onupgradeneeded = () => {
         const db = req.result;
         if (!db.objectStoreNames.contains(this.storeName)) {
-          const store = db.createObjectStore(this.storeName, { keyPath: 'key' });
-          store.createIndex('namespace', 'namespace');
+          const store = db.createObjectStore(this.storeName, {
+            keyPath: "key",
+          });
+          store.createIndex("namespace", "namespace");
         }
       };
       req.onsuccess = () => resolve(req.result);
@@ -121,10 +146,11 @@ class IdxStore {
     try {
       const db = await this.open();
       return await new Promise((resolve, reject) => {
-        const tx = db.transaction(this.storeName, 'readonly');
+        const tx = db.transaction(this.storeName, "readonly");
         const store = tx.objectStore(this.storeName);
         const req = store.get(key);
-        req.onsuccess = () => resolve((req.result?.value as CacheEntry<T>) ?? null);
+        req.onsuccess = () =>
+          resolve((req.result?.value as CacheEntry<T>) ?? null);
         req.onerror = () => reject(req.error);
       });
     } catch {
@@ -132,11 +158,15 @@ class IdxStore {
     }
   }
 
-  async set<T>(key: string, value: CacheEntry<T>, namespace: string): Promise<void> {
+  async set<T>(
+    key: string,
+    value: CacheEntry<T>,
+    namespace: string,
+  ): Promise<void> {
     try {
       const db = await this.open();
       await new Promise<void>((resolve, reject) => {
-        const tx = db.transaction(this.storeName, 'readwrite');
+        const tx = db.transaction(this.storeName, "readwrite");
         const store = tx.objectStore(this.storeName);
         const req = store.put({ key, namespace, value });
         req.onsuccess = () => resolve();
@@ -151,7 +181,7 @@ class IdxStore {
     try {
       const db = await this.open();
       await new Promise<void>((resolve, reject) => {
-        const tx = db.transaction(this.storeName, 'readwrite');
+        const tx = db.transaction(this.storeName, "readwrite");
         const store = tx.objectStore(this.storeName);
         const req = store.delete(key);
         req.onsuccess = () => resolve();
@@ -166,9 +196,9 @@ class IdxStore {
     try {
       const db = await this.open();
       await new Promise<void>((resolve, reject) => {
-        const tx = db.transaction(this.storeName, 'readwrite');
+        const tx = db.transaction(this.storeName, "readwrite");
         const store = tx.objectStore(this.storeName);
-        const idx = store.index('namespace');
+        const idx = store.index("namespace");
         const req = idx.openKeyCursor(IDBKeyRange.only(namespace));
         req.onsuccess = () => {
           const cursor = req.result as IDBCursor | null;
@@ -232,5 +262,3 @@ export class GithubRepoCache implements RepoCache {
     await this.persistent.clearNamespace(namespace);
   }
 }
-
-

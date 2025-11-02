@@ -1,12 +1,16 @@
 [
   {
     "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "commit": { "message": "Add feature x", "author": { "name": "Alice", "date": "2024-01-01T00:00:00Z" } }
+    "commit": {
+      "message": "Add feature x",
+      "author": { "name": "Alice", "date": "2024-01-01T00:00:00Z" }
+    }
   },
   {
     "sha": "cccccccccccccccccccccccccccccccccccccccc",
-    "commit": { "message": "Fix bug", "author": { "name": "Bob", "date": "2024-01-02T00:00:00Z" } }
+    "commit": {
+      "message": "Fix bug",
+      "author": { "name": "Bob", "date": "2024-01-02T00:00:00Z" }
+    }
   }
 ]
-
-

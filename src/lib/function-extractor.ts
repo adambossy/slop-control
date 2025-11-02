@@ -1,22 +1,27 @@
-import type { ParsedDiff, FunctionNode, FunctionPattern, Hunk } from '@types';
+import type { ParsedDiff, FunctionNode, FunctionPattern, Hunk } from "@types";
 
 /**
  * Patterns for detecting function definitions across languages
  */
 const FUNCTION_PATTERNS: FunctionPattern[] = [
-  { regex: /^\s*(?:async\s+)?function\s+(\w+)\s*\(/, lang: 'js', type: 'function' },
+  {
+    regex: /^\s*(?:async\s+)?function\s+(\w+)\s*\(/,
+    lang: "js",
+    type: "function",
+  },
   {
     regex: /^\s*(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\(/,
-    lang: 'js',
-    type: 'arrow',
+    lang: "js",
+    type: "arrow",
   },
-  { regex: /^\s*(?:async\s+)?def\s+(\w+)\s*\(/, lang: 'py', type: 'function' },
-  { regex: /^\s*class\s+(\w+)/, lang: 'py', type: 'class' },
-  { regex: /^\s*func\s+(\w+)\s*\(/, lang: 'go', type: 'function' },
+  { regex: /^\s*(?:async\s+)?def\s+(\w+)\s*\(/, lang: "py", type: "function" },
+  { regex: /^\s*class\s+(\w+)/, lang: "py", type: "class" },
+  { regex: /^\s*func\s+(\w+)\s*\(/, lang: "go", type: "function" },
   {
-    regex: /^\s*(?:public|private|protected)?\s*(?:static\s+)?(?:async\s+)?(\w+)\s*\([^)]*\)\s*\{/,
-    lang: 'java',
-    type: 'method',
+    regex:
+      /^\s*(?:public|private|protected)?\s*(?:static\s+)?(?:async\s+)?(\w+)\s*\([^)]*\)\s*\{/,
+    lang: "java",
+    type: "method",
   },
 ];
 
@@ -31,7 +36,7 @@ export function extractFunctions(diff: ParsedDiff): FunctionNode[] {
 
     file.hunks.forEach((hunk) => {
       hunk.lines.forEach((line, lineIdx) => {
-        if (line.type === 'addition' || line.type === 'deletion') {
+        if (line.type === "addition" || line.type === "deletion") {
           for (const pattern of FUNCTION_PATTERNS) {
             const match = line.content.match(pattern.regex);
             if (match) {
@@ -39,17 +44,26 @@ export function extractFunctions(diff: ParsedDiff): FunctionNode[] {
               if (!functionName) continue;
 
               const lineNumber =
-                line.type === 'addition' ? hunk.newStart + lineIdx : hunk.oldStart + lineIdx;
+                line.type === "addition"
+                  ? hunk.newStart + lineIdx
+                  : hunk.oldStart + lineIdx;
 
-              const { additions, deletions } = countChangesInScope(hunk, lineIdx);
+              const { additions, deletions } = countChangesInScope(
+                hunk,
+                lineIdx,
+              );
 
               functions.push({
                 name: functionName,
                 file: fileName,
-                shortFile: fileName.split('/').pop() || fileName,
+                shortFile: fileName.split("/").pop() || fileName,
                 lineNumber,
                 changeType:
-                  line.type === 'addition' ? 'addition' : line.type === 'deletion' ? 'deletion' : 'modification',
+                  line.type === "addition"
+                    ? "addition"
+                    : line.type === "deletion"
+                      ? "deletion"
+                      : "modification",
                 additions,
                 deletions,
                 type: pattern.type,
@@ -71,7 +85,10 @@ export function extractFunctions(diff: ParsedDiff): FunctionNode[] {
  * Count additions/deletions within a function's scope
  * Uses brace matching to determine scope boundaries
  */
-function countChangesInScope(hunk: Hunk, startIdx: number): { additions: number; deletions: number } {
+function countChangesInScope(
+  hunk: Hunk,
+  startIdx: number,
+): { additions: number; deletions: number } {
   let additions = 0;
   let deletions = 0;
   let scopeDepth = 0;
@@ -82,11 +99,11 @@ function countChangesInScope(hunk: Hunk, startIdx: number): { additions: number;
     if (i === startIdx) inFunction = true;
 
     if (inFunction) {
-      if (line.content.includes('{')) scopeDepth++;
-      if (line.content.includes('}')) scopeDepth--;
+      if (line.content.includes("{")) scopeDepth++;
+      if (line.content.includes("}")) scopeDepth--;
 
-      if (line.type === 'addition') additions++;
-      if (line.type === 'deletion') deletions++;
+      if (line.type === "addition") additions++;
+      if (line.type === "deletion") deletions++;
 
       if (scopeDepth === 0 && i > startIdx) break;
     }
@@ -94,5 +111,3 @@ function countChangesInScope(hunk: Hunk, startIdx: number): { additions: number;
 
   return { additions, deletions };
 }
-
-

@@ -1,4 +1,4 @@
-import type { GithubClient } from '@types';
+import type { GithubClient } from "@types";
 
 type BranchItem = { name: string; commitSha: string };
 type CommitItem = { sha: string; message: string; author?: string };
@@ -12,7 +12,7 @@ export class GithubInputs {
     private branchSelect: HTMLSelectElement,
     private baseInput: HTMLInputElement,
     private headInput: HTMLInputElement,
-    private fetchButton: HTMLButtonElement
+    private fetchButton: HTMLButtonElement,
   ) {
     this.attachHandlers();
   }
@@ -23,23 +23,23 @@ export class GithubInputs {
   }
 
   private attachHandlers(): void {
-    this.repoInput.addEventListener('blur', () => {
+    this.repoInput.addEventListener("blur", () => {
       const valid = this.isValidRepo(this.repoInput.value);
-      this.repoInput.classList.toggle('input-error', !valid);
-      if (valid) this.emit('repoValid', this.repoInput.value);
+      this.repoInput.classList.toggle("input-error", !valid);
+      if (valid) this.emit("repoValid", this.repoInput.value);
     });
 
-    this.branchSelect.addEventListener('change', () => {
-      this.emit('branchSelected', this.branchSelect.value);
+    this.branchSelect.addEventListener("change", () => {
+      this.emit("branchSelected", this.branchSelect.value);
     });
 
-    this.fetchButton.addEventListener('click', () => {
+    this.fetchButton.addEventListener("click", () => {
       const repo = this.repoInput.value.trim();
       if (!this.isValidRepo(repo)) return;
-      const [owner, repoName] = repo.split('/') as [string, string];
+      const [owner, repoName] = repo.split("/") as [string, string];
       const base = this.baseInput.value.trim();
       const head = this.headInput.value.trim();
-      this.emit('fetch', { owner, repo: repoName, base, head });
+      this.emit("fetch", { owner, repo: repoName, base, head });
     });
   }
 
@@ -48,14 +48,14 @@ export class GithubInputs {
   }
 
   setBranches(branches: BranchItem[]): void {
-    this.branchSelect.innerHTML = '';
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = 'Select a branch';
+    this.branchSelect.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select a branch";
     this.branchSelect.appendChild(placeholder);
 
     branches.forEach((b) => {
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = b.name;
       opt.textContent = `${b.name} (${b.commitSha.slice(0, 7)})`;
       this.branchSelect.appendChild(opt);
@@ -67,8 +67,8 @@ export class GithubInputs {
   }
 
   on(
-    event: 'repoValid' | 'branchSelected' | 'fetch',
-    handler: (arg: any) => void
+    event: "repoValid" | "branchSelected" | "fetch",
+    handler: (arg: any) => void,
   ): void {
     if (!this.listeners.has(event)) this.listeners.set(event, new Set());
     this.listeners.get(event)!.add(handler);
@@ -82,5 +82,3 @@ export class GithubInputs {
     this.listeners.clear();
   }
 }
-
-

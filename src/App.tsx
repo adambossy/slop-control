@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export function App(): React.ReactElement {
   return (
@@ -8,5 +8,3 @@ export function App(): React.ReactElement {
     </div>
   );
 }
-
-

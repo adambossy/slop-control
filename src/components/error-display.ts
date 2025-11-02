@@ -1,11 +1,11 @@
-import { showLoading, showError, showEmptyState } from '../utils/dom-helpers';
+import { showLoading, showError, showEmptyState } from "../utils/dom-helpers";
 
 export class ErrorDisplay {
   private countdownTimer: number | null = null;
 
   constructor(private container: HTMLElement) {}
 
-  loading(message = 'Loading...'): void {
+  loading(message = "Loading..."): void {
     this.clearTimer();
     showLoading(this.container, message);
   }
@@ -15,7 +15,7 @@ export class ErrorDisplay {
     showEmptyState(this.container, message);
   }
 
-  networkError(message = 'Network error. Please try again.'): void {
+  networkError(message = "Network error. Please try again."): void {
     this.clearTimer();
     showError(this.container, message);
   }
@@ -29,7 +29,7 @@ export class ErrorDisplay {
       const secs = remaining % 60;
       showError(
         this.container,
-        `Rate limit reached. Retry in ${mins}:${secs.toString().padStart(2, '0')}`
+        `Rate limit reached. Retry in ${mins}:${secs.toString().padStart(2, "0")}`,
       );
     };
     update();
@@ -38,7 +38,7 @@ export class ErrorDisplay {
 
   clear(): void {
     this.clearTimer();
-    this.container.innerHTML = '';
+    this.container.innerHTML = "";
   }
 
   private clearTimer(): void {
@@ -48,5 +48,3 @@ export class ErrorDisplay {
     }
   }
 }
-
-

@@ -1,4 +1,5 @@
 <!-- 7b1ad70c-40c3-4457-8431-ab45daeba120 bbbe419a-3a13-4ae6-a5f9-19af6646b411 -->
+
 # GitHub Diff Selector Component Specification
 
 ## Overview

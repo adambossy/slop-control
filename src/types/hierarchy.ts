@@ -10,6 +10,5 @@ export interface CallSite {
   line: number;
   content: string;
   functionName?: string;
-  type: 'addition' | 'deletion' | 'context';
+  type: "addition" | "deletion" | "context";
 }
-

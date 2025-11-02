@@ -1,6 +1,6 @@
-import type { DiffFile, FunctionNode } from '@types';
-import { escapeHtml } from '../utils/escape-html';
-import { showEmptyState } from '../utils/dom-helpers';
+import type { DiffFile, FunctionNode } from "@types";
+import { escapeHtml } from "../utils/escape-html";
+import { showEmptyState } from "../utils/dom-helpers";
 
 export class DiffViewer {
   private listeners: Map<string, Set<Function>> = new Map();
@@ -10,14 +10,14 @@ export class DiffViewer {
   }
 
   private setupTextSelectionHandler(): void {
-    document.addEventListener('mouseup', () => {
+    document.addEventListener("mouseup", () => {
       const selection = window.getSelection();
       const selectedText = selection?.toString().trim();
 
       if (selectedText) {
         const range = selection?.getRangeAt(0);
         if (range && this.container.contains(range.commonAncestorContainer)) {
-          this.emit('textSelect', selectedText);
+          this.emit("textSelect", selectedText);
         }
       }
     });
@@ -34,7 +34,10 @@ export class DiffViewer {
   }
 
   clear(): void {
-    showEmptyState(this.container, 'Select a node in the diagram to see the relevant diff');
+    showEmptyState(
+      this.container,
+      "Select a node in the diagram to see the relevant diff",
+    );
   }
 
   private generateFunctionHTML(file: DiffFile, funcNode: FunctionNode): string {
@@ -46,25 +49,27 @@ export class DiffViewer {
     let oldLine = targetHunk.oldStart;
     let newLine = targetHunk.newStart;
 
-    const funcLineIdx = targetHunk.lines.findIndex((l) => l.content.includes(funcNode.fullLine.trim()));
+    const funcLineIdx = targetHunk.lines.findIndex((l) =>
+      l.content.includes(funcNode.fullLine.trim()),
+    );
 
     const startIdx = Math.max(0, funcLineIdx - 5);
     const endIdx = Math.min(targetHunk.lines.length, funcLineIdx + 30);
 
     for (let i = 0; i < startIdx; i++) {
       const line = targetHunk.lines[i]!;
-      if (line.type === 'deletion' || line.type === 'context') oldLine++;
-      if (line.type === 'addition' || line.type === 'context') newLine++;
+      if (line.type === "deletion" || line.type === "context") oldLine++;
+      if (line.type === "addition" || line.type === "context") newLine++;
     }
 
     for (let i = startIdx; i < endIdx; i++) {
       const line = targetHunk.lines[i]!;
       const lineClass = line.type;
-      let lineNum = '';
+      let lineNum = "";
 
-      if (line.type === 'deletion') {
+      if (line.type === "deletion") {
         lineNum = String(oldLine++);
-      } else if (line.type === 'addition') {
+      } else if (line.type === "addition") {
         lineNum = String(newLine++);
       } else {
         lineNum = String(newLine++);
@@ -72,15 +77,17 @@ export class DiffViewer {
       }
 
       const isTargetLine = i === funcLineIdx;
-      const style = isTargetLine ? ' style="background: #264f78 !important;"' : '';
+      const style = isTargetLine
+        ? ' style="background: #264f78 !important;"'
+        : "";
 
       html += `<div class="diff-line ${lineClass}"${style}>`;
       html += `<span class="line-number">${lineNum}</span>`;
       html += `<span class="line-content">${escapeHtml(line.content)}</span>`;
-      html += '</div>';
+      html += "</div>";
     }
 
-    html += '</div></div>';
+    html += "</div></div>";
     return html;
   }
 
@@ -95,11 +102,11 @@ export class DiffViewer {
 
       hunk.lines.forEach((line) => {
         const lineClass = line.type;
-        let lineNum = '';
+        let lineNum = "";
 
-        if (line.type === 'deletion') {
+        if (line.type === "deletion") {
           lineNum = String(oldLine++);
-        } else if (line.type === 'addition') {
+        } else if (line.type === "addition") {
           lineNum = String(newLine++);
         } else {
           lineNum = String(newLine++);
@@ -109,15 +116,15 @@ export class DiffViewer {
         html += `<div class="diff-line ${lineClass}">`;
         html += `<span class="line-number">${lineNum}</span>`;
         html += `<span class="line-content">${escapeHtml(line.content)}</span>`;
-        html += '</div>';
+        html += "</div>";
       });
     });
 
-    html += '</div></div>';
+    html += "</div></div>";
     return html;
   }
 
-  on(event: 'textSelect', handler: (text: string) => void): void {
+  on(event: "textSelect", handler: (text: string) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -132,4 +139,3 @@ export class DiffViewer {
     this.listeners.clear();
   }
 }
-

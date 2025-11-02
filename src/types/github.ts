@@ -34,7 +34,7 @@ export interface GithubCompareResponse {
 // Cache Types
 // =========================
 
-export type GithubResource = 'branches' | 'commits' | 'compare' | 'raw';
+export type GithubResource = "branches" | "commits" | "compare" | "raw";
 
 export interface CacheKey {
   namespace: string; // e.g., 'github:v1'
@@ -82,14 +82,20 @@ export interface GithubClient {
     owner: string;
     repo: string;
     per_page?: number;
-  }): Promise<{ branches: Array<{ name: string; commitSha: string }>; fromCache: boolean }>;
+  }): Promise<{
+    branches: Array<{ name: string; commitSha: string }>;
+    fromCache: boolean;
+  }>;
 
   listCommits(args: {
     owner: string;
     repo: string;
     sha: string; // branch name or SHA
     per_page?: number;
-  }): Promise<{ commits: Array<{ sha: string; message: string; author?: string }>; fromCache: boolean }>;
+  }): Promise<{
+    commits: Array<{ sha: string; message: string; author?: string }>;
+    fromCache: boolean;
+  }>;
 
   compare(args: {
     owner: string;
@@ -111,5 +117,3 @@ export interface RateLimitInfo {
   reset: number; // epoch seconds from header
   limit: number;
 }
-
-

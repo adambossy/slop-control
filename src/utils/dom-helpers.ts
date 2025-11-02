@@ -3,7 +3,7 @@
  */
 export function getElement<T extends HTMLElement>(
   selector: string,
-  parent: Document | HTMLElement = document
+  parent: Document | HTMLElement = document,
 ): T {
   const element = parent.querySelector<T>(selector);
   if (!element) {
@@ -17,7 +17,7 @@ export function getElement<T extends HTMLElement>(
  */
 export function getElementOrNull<T extends HTMLElement>(
   selector: string,
-  parent: Document | HTMLElement = document
+  parent: Document | HTMLElement = document,
 ): T | null {
   return parent.querySelector<T>(selector);
 }
@@ -26,13 +26,16 @@ export function getElementOrNull<T extends HTMLElement>(
  * Clear element contents
  */
 export function clearElement(element: HTMLElement): void {
-  element.innerHTML = '';
+  element.innerHTML = "";
 }
 
 /**
  * Show loading state
  */
-export function showLoading(element: HTMLElement, message = 'Loading...'): void {
+export function showLoading(
+  element: HTMLElement,
+  message = "Loading...",
+): void {
   element.innerHTML = `<div class="loading">${message}</div>`;
 }
 
@@ -49,4 +52,3 @@ export function showError(element: HTMLElement, message: string): void {
 export function showEmptyState(element: HTMLElement, message: string): void {
   element.innerHTML = `<div class="empty-state">${message}</div>`;
 }
-
