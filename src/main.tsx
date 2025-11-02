@@ -26,7 +26,7 @@ function ResizableTwoColumnLayout(): React.ReactElement {
       }
       draggingRef.current = false;
       document.body.style.cursor = "";
-      (document.body.style as any).userSelect = "";
+      document.body.style.setProperty("user-select", "");
     }
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -40,7 +40,7 @@ function ResizableTwoColumnLayout(): React.ReactElement {
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
     draggingRef.current = true;
     document.body.style.cursor = "col-resize";
-    (document.body.style as any).userSelect = "none";
+    document.body.style.setProperty("user-select", "none");
     event.preventDefault();
   };
 

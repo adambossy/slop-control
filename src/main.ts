@@ -17,6 +17,8 @@ import { createGithubClient } from "@lib/github-adapter";
 /**
  * Code Review Tool - Main Application
  */
+import type { ParsedDiff, DiffFile, FunctionNode } from "@types";
+
 class CodeReviewApp {
   private diagram: DiagramRenderer;
   private diffViewer: DiffViewer;
@@ -25,8 +27,8 @@ class CodeReviewApp {
   private githubInputs: GithubInputs | null = null;
   private githubStatus: ErrorDisplay | null = null;
 
-  private parsedDiff: any = null;
-  private currentFile: any = null;
+  private parsedDiff: ParsedDiff | null = null;
+  private currentFile: DiffFile | null = null;
 
   constructor() {
     // Initialize components
@@ -105,7 +107,7 @@ class CodeReviewApp {
           const { branches } = await githubClient.listBranches({ owner, repo });
           this.githubInputs?.setBranches(branches);
           this.githubStatus?.clear();
-        } catch (e: any) {
+        } catch (e: unknown) {
           this.githubStatus?.networkError("Failed to load branches");
           console.error(e);
         }
@@ -153,10 +155,18 @@ class CodeReviewApp {
             });
             this.githubStatus?.clear();
             await this.handleDiffLoad(diff, "github");
-          } catch (e: any) {
+          } catch (e: unknown) {
             // If we can extract rate limit reset, show countdown
             const resetHeader =
-              (e?.headers?.get && e.headers.get("x-ratelimit-reset")) || null;
+              typeof e === "object" &&
+              e &&
+              "headers" in e &&
+              (e as { headers?: { get?: (k: string) => string | null } })
+                .headers?.get
+                ? (
+                    e as { headers: { get: (k: string) => string | null } }
+                  ).headers.get("x-ratelimit-reset")
+                : null;
             if (resetHeader) {
               this.githubStatus?.rateLimited(Number(resetHeader));
             } else {
@@ -229,10 +239,11 @@ class CodeReviewApp {
     }
   }
 
-  private handleNodeClick(funcNode: any): void {
+  private handleNodeClick(funcNode: FunctionNode): void {
     console.log("Node clicked:", funcNode);
     const file = this.parsedDiff?.files.find(
-      (f: any) => f.newPath === funcNode.file || f.oldPath === funcNode.file,
+      (f: DiffFile) =>
+        f.newPath === funcNode.file || f.oldPath === funcNode.file,
     );
     if (file) {
       this.currentFile = file;
@@ -252,5 +263,10 @@ class CodeReviewApp {
 // Initialize app when DOM is ready
 const app = new CodeReviewApp();
 
+declare global {
+  interface Window {
+    app: CodeReviewApp;
+  }
+}
 // Make app globally accessible for debugging
-(window as any).app = app;
+window.app = app;

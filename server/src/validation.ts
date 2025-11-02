@@ -10,7 +10,7 @@ export function validateBody<T>(schema: ZodSchema<T>): RequestHandler {
         .json({ error: "Invalid request", issues: result.error.format() });
       return;
     }
-    (req as any).validatedBody = result.data;
+    (req as Request & { validatedBody: T }).validatedBody = result.data;
     next();
   };
 }
