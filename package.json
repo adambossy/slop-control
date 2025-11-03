@@ -24,7 +24,8 @@
     "prepare": "husky",
     "server:dev": "bunx tsx watch server/src/index.ts",
     "server:build": "tsc -p tsconfig.server.json",
-    "server:start": "node --enable-source-maps server/dist/index.js"
+    "server:start": "node --enable-source-maps server/dist/index.js",
+    "generate:promptorium-diagram": "bun run scripts/generate-promptorium-diagram.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

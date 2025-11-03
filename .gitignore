@@ -45,4 +45,7 @@ Thumbs.db
 # Server build output
 server/dist/
 
+# Generated diagrams
+.diagrams
+
 .cursor
