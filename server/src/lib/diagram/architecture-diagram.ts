@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import type { EnsureRepoAtRefParams } from "../../types.js";
-import { concatenateFiles } from "../../fs-text.js";
+import type { EnsureRepoAtRefParams } from "@slop/github-repo-snapshot";
+import { concatenateFiles } from "@slop/github-repo-snapshot";
 import { buildArchitecturePrompt } from "./architecture-prompt.js";
 
 export type GenerateRepoArchitectureDiagramParams = EnsureRepoAtRefParams & {

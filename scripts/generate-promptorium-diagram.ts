@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { generateRepoArchitectureDiagram } from "../packages/github-repo-snapshot/src/index.js";
+import { generateRepoArchitectureDiagram } from "../server/src/lib/diagram/architecture-diagram.js";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 

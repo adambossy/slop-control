@@ -8,7 +8,7 @@ export interface BuildArchitecturePromptParams {
 const PROMPT_HEADER = `You are an expert software architect tasked with synthesizing an architectural diagram from a full codebase listing. The listing will include project layout (file paths), source code, configuration files, and documentation.
 
 **Goal**
-Produce a single diagram that captures the system’s most important structural and behavioral characteristics so that senior engineers can quickly understand how the system is organized and how data flows through it.
+Produce a single diagram that captures the system's most important structural and behavioral characteristics so that senior engineers can quickly understand how the system is organized and how data flows through it.
 
 **Expectations**
 
