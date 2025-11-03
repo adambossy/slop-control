@@ -1,0 +1,15 @@
+{
+  "name": "@slop/server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "bunx tsx watch src/index.ts",
+    "build": "tsc -p ../tsconfig.server.json",
+    "start": "node --enable-source-maps dist/index.js"
+  },
+  "dependencies": {
+    "@slop/github-repo-snapshot": "workspace:*"
+  }
+}

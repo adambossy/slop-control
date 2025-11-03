@@ -3,12 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "server"
+  ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:workspaces": "bun run -C packages/github-repo-snapshot build && bun run -C server build",
+    "build:all": "bun run build:workspaces && bun run build",
     "preview": "vite preview",
     "lint": "bunx eslint . --max-warnings=0",
     "typecheck": "bunx tsc --noEmit --pretty false",
