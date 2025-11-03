@@ -1,6 +1,5 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { posix as pathPosix } from "node:path";
 import ignore from "ignore";
 import type {
   ConcatOptions,

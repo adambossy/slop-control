@@ -1,7 +1,4 @@
-/* test globals for type-check without installing vitest types */
-declare const describe: any;
-declare const it: any;
-declare const expect: any;
+import { describe, it, expect } from "vitest";
 import { concatenateFiles, getDirectoryTree } from "../src/index.js";
 
 const run = process.env.CI_NO_NET ? it.skip : it;
