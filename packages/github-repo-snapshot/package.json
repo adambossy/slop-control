@@ -19,7 +19,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "ignore": "^5.3.1"
+    "ignore": "^5.3.1",
+    "openai": "^4.77.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "tsup": "^8.3.0",
