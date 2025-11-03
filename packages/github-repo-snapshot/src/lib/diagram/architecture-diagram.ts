@@ -95,7 +95,7 @@ let repositoryFetcher: RepositoryFetcher = concatenateFiles;
 export async function generateRepoArchitectureDiagram(
   params: GenerateRepoArchitectureDiagramParams,
 ): Promise<string> {
-  const { owner, repo, ref, model = "gpt-4.1-mini", client } = params;
+  const { owner, repo, ref, model = "gpt-5", client } = params;
 
   const codebaseListing = await repositoryFetcher({ owner, repo, ref });
   const prompt = buildArchitecturePrompt({ codebaseListing });
