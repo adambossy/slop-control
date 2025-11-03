@@ -45,3 +45,4 @@ Thumbs.db
 # Server build output
 server/dist/
 
+.cursor
