@@ -55,7 +55,7 @@ Produce a single diagram that captures the system’s most important structural 
      - A legend explaining symbols/notations.
      - A narrative summary covering the dominant architectural pattern, critical data paths, notable design trade-offs, and explicit assumptions.
 
-When you have read the entire codebase dump, respond with the outline. Do not generate the final diagram until the outline has been completed.
+When you have read the entire codebase dump, respond with the outline. Do not generate the final diagram until the outline has been reviewed and approved.
 
 ---
 
@@ -65,4 +65,8 @@ export function buildArchitecturePrompt({
   codebaseListing,
 }: BuildArchitecturePromptParams): string {
   return `${PROMPT_HEADER}\n\n${codebaseListing}`;
+}
+
+export function getArchitecturePromptHeader(): string {
+  return PROMPT_HEADER;
 }

@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import type { EnsureRepoAtRefParams } from "./types.js";
-import { concatenateFiles } from "./fs-text.js";
+import type { EnsureRepoAtRefParams } from "../../types.js";
+import { concatenateFiles } from "../../fs-text.js";
 import { buildArchitecturePrompt } from "./architecture-prompt.js";
 
 export type GenerateRepoArchitectureDiagramParams = EnsureRepoAtRefParams & {
@@ -88,12 +88,16 @@ function extractMermaidDiagram(text: string): string {
   throw new Error("Unable to locate Mermaid diagram in model response.");
 }
 
+type RepositoryFetcher = (params: EnsureRepoAtRefParams) => Promise<string>;
+
+let repositoryFetcher: RepositoryFetcher = concatenateFiles;
+
 export async function generateRepoArchitectureDiagram(
   params: GenerateRepoArchitectureDiagramParams,
 ): Promise<string> {
-  const { owner, repo, ref, model = "gpt-5", client } = params;
+  const { owner, repo, ref, model = "gpt-4.1-mini", client } = params;
 
-  const codebaseListing = await concatenateFiles({ owner, repo, ref });
+  const codebaseListing = await repositoryFetcher({ owner, repo, ref });
   const prompt = buildArchitecturePrompt({ codebaseListing });
   const openaiClient = ensureClient(client);
 
@@ -104,6 +108,11 @@ export async function generateRepoArchitectureDiagram(
         role: "user",
         content: prompt,
       },
+      {
+        role: "user",
+        content:
+          "Outline approved. Provide the final Mermaid diagram, legend, and narrative summary now.",
+      },
     ],
   });
 
@@ -112,8 +121,18 @@ export async function generateRepoArchitectureDiagram(
   return extractMermaidDiagram(outputText);
 }
 
+function setRepositoryFetcher(fetcher: RepositoryFetcher): void {
+  repositoryFetcher = fetcher;
+}
+
+function resetRepositoryFetcher(): void {
+  repositoryFetcher = concatenateFiles;
+}
+
 export const __internal = {
   ResponsesResultSchema,
   extractTextFromResponse,
   extractMermaidDiagram,
+  setRepositoryFetcher,
+  resetRepositoryFetcher,
 };

@@ -4,12 +4,12 @@ declare const it: any;
 declare const expect: any;
 declare const beforeEach: any;
 
-import type { ResponsesResult } from "../src/architecture-diagram.js";
-import { buildArchitecturePrompt } from "../src/architecture-prompt.js";
+import type { ResponsesResult } from "./architecture-diagram.js";
+import { buildArchitecturePrompt } from "./architecture-prompt.js";
 import {
   __internal as architectureDiagramInternals,
   generateRepoArchitectureDiagram,
-} from "../src/architecture-diagram.js";
+} from "./architecture-diagram.js";
 
 describe("architecture diagram prompt", () => {
   it("prepends the fixed header before the listing", () => {

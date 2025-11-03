@@ -5,13 +5,14 @@ export {
 } from "./fs-text.js";
 export {
   buildArchitecturePrompt,
+  getArchitecturePromptHeader,
   type BuildArchitecturePromptParams,
-} from "./architecture-prompt.js";
+} from "./lib/diagram/architecture-prompt.js";
 export {
   generateRepoArchitectureDiagram,
   type GenerateRepoArchitectureDiagramParams,
   __internal as architectureDiagramInternals,
-} from "./architecture-diagram.js";
+} from "./lib/diagram/architecture-diagram.js";
 export type {
   EnsureRepoAtRefParams,
   EnsureRepoAtRefResult,
