@@ -1,9 +1,9 @@
-export type BuildArchitecturePromptParams = {
+export interface BuildArchitecturePromptParams {
   /**
    * Complete concatenated repository listing, including path headers and file contents.
    */
   codebaseListing: string;
-};
+}
 
 const PROMPT_HEADER = `You are an expert software architect tasked with synthesizing an architectural diagram from a full codebase listing. The listing will include project layout (file paths), source code, configuration files, and documentation.
 

@@ -1,15 +1,47 @@
-/* test globals for type-check without installing vitest types */
-declare const describe: any;
-declare const it: any;
-declare const expect: any;
-declare const beforeEach: any;
-
+import type { FinalRequestOptions } from "openai/core";
 import type { ResponsesResult } from "./architecture-diagram.js";
-import { buildArchitecturePrompt } from "./architecture-prompt.js";
-import {
-  __internal as architectureDiagramInternals,
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { APIPromise } from "openai/core";
+
+interface ResponsesCreateRequest {
+  model: string;
+  input: Array<{
+    role: string;
+    content: string;
+  }>;
+}
+
+type CreateImpl = (
+  request: ResponsesCreateRequest,
+) => APIPromise<ResponsesResult>;
+
+let createImplementation: CreateImpl | undefined;
+
+mock.module("openai", () => {
+  class MockOpenAI {
+    public responses = {
+      create: (request: ResponsesCreateRequest) => {
+        if (!createImplementation) {
+          throw new Error("Mock create not implemented.");
+        }
+        return createImplementation(request);
+      },
+    };
+
+    constructor(_config?: { apiKey?: string }) {
+      void _config;
+    }
+  }
+
+  return { default: MockOpenAI };
+});
+
+const { buildArchitecturePrompt } = await import("./architecture-prompt.js");
+const {
+  __internal: architectureDiagramInternals,
   generateRepoArchitectureDiagram,
-} from "./architecture-diagram.js";
+} = await import("./architecture-diagram.js");
+const { default: OpenAI } = await import("openai");
 
 describe("architecture diagram prompt", () => {
   it("prepends the fixed header before the listing", () => {
@@ -79,22 +111,20 @@ describe("generateRepoArchitectureDiagram", () => {
     const listing = "===== /file.txt =====\nconsole.log('hi');";
     let receivedArgs: unknown;
     const expectedMermaid = "flowchart TD\nA-->B";
-    const fakeClient = {
-      responses: {
-        create: async () => ({
-          id: "resp_fake",
-          status: "completed",
-          output_text: [
-            "Here you go.",
-            "",
-            "```mermaid",
-            expectedMermaid,
-            "```",
-          ].join("\n"),
-          output: [],
-        }),
-      },
-    } as any;
+    const fakeClient = new OpenAI({ apiKey: "test" });
+    const responsePayload = {
+      id: "resp_fake",
+      status: "completed",
+      output_text: [
+        "Here you go.",
+        "",
+        "```mermaid",
+        expectedMermaid,
+        "```",
+      ].join("\n"),
+      output: [],
+    } satisfies ResponsesResult;
+    createImplementation = () => createApiPromise(responsePayload);
 
     try {
       architectureDiagramInternals.setRepositoryFetcher(async (args) => {
@@ -116,7 +146,27 @@ describe("generateRepoArchitectureDiagram", () => {
         ref: "main",
       });
     } finally {
+      createImplementation = undefined;
       architectureDiagramInternals.resetRepositoryFetcher();
     }
   });
 });
+
+function createApiPromise(data: ResponsesResult): APIPromise<ResponsesResult> {
+  const controller = new AbortController();
+  const response = new Response(JSON.stringify(data), {
+    headers: { "content-type": "application/json" },
+  });
+  const options = {
+    method: "post",
+    path: "/responses",
+  } satisfies FinalRequestOptions;
+  return new APIPromise(
+    Promise.resolve({
+      response,
+      options,
+      controller,
+    }),
+    async () => data,
+  );
+}
