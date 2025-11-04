@@ -13,7 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "build:workspaces": "bun run -C packages/github-repo-snapshot build && bun run -C server build",
+    "build:workspaces": "(cd packages/github-repo-snapshot && bun run build) && (cd server && bun run build)",
     "build:all": "bun run build:workspaces && bun run build",
     "preview": "vite preview",
     "lint": "bunx eslint . --max-warnings=0",
