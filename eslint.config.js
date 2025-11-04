@@ -7,6 +7,7 @@ export default tseslint.config(
       "node_modules/",
       "dist/",
       "server/dist/",
+      "**/dist/**",
       "coverage/",
       "build/",
       "prototypes/**",
