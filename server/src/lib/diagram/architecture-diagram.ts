@@ -90,14 +90,16 @@ function extractMermaidDiagram(text: string): string {
 }
 
 async function validateAndCorrectMermaidDiagram(
-  diagram: string,
-  originalConversation: Array<{ role: string; content: string }>,
+  conversation: Array<{ role: string; content: string }>,
   openaiClient: OpenAI,
   model: string,
   maxRetries = 3,
 ): Promise<string> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      const diagram = extractMermaidDiagram(
+        conversation[conversation.length - 1].content,
+      );
       // Validate the diagram using mermaid.parse()
       // parse() throws if invalid and suppressErrors is false
       mermaid.parse(diagram, { suppressErrors: false });
@@ -125,7 +127,7 @@ Please provide the corrected Mermaid diagram code. Output ONLY the corrected dia
       // Create new conversation with full history + correction request
       // originalConversation includes user messages and assistant responses
       const correctionInput = [
-        ...originalConversation,
+        ...conversation,
         {
           role: "user" as const,
           content: correctionPrompt,
@@ -142,9 +144,8 @@ Please provide the corrected Mermaid diagram code. Output ONLY the corrected dia
 
       const parsed = ResponsesResultSchema.parse(correctionResponse);
       const outputText = extractTextFromResponse(parsed);
-      diagram = extractMermaidDiagram(outputText);
 
-      originalConversation.push({
+      conversation.push({
         role: "assistant",
         content: outputText,
       });
@@ -169,7 +170,7 @@ export async function generateRepoArchitectureDiagram(
   const openaiClient = ensureClient(client);
 
   // Store original conversation for potential correction loops
-  const originalConversation = [
+  const conversation = [
     {
       role: "user",
       content: prompt,
@@ -183,18 +184,17 @@ export async function generateRepoArchitectureDiagram(
 
   const response = await openaiClient.responses.create({
     model,
-    input: originalConversation as Parameters<
+    input: conversation as Parameters<
       typeof openaiClient.responses.create
     >[0]["input"],
   });
 
   const parsed = ResponsesResultSchema.parse(response);
   const outputText = extractTextFromResponse(parsed);
-  const rawDiagram = extractMermaidDiagram(outputText);
 
   // Build full conversation history including assistant response
   const fullConversation = [
-    ...originalConversation,
+    ...conversation,
     {
       role: "assistant",
       content: outputText,
@@ -203,7 +203,6 @@ export async function generateRepoArchitectureDiagram(
 
   // Validate and correct the diagram if needed
   const validatedDiagram = await validateAndCorrectMermaidDiagram(
-    rawDiagram,
     fullConversation,
     openaiClient,
     model,
