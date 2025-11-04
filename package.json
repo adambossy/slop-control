@@ -46,6 +46,7 @@
     "vite": "^7.1.7"
   },
   "dependencies": {
+    "@slop/github-repo-snapshot": "workspace:*",
     "express": "^4.21.1",
     "mermaid": "^11.12.1",
     "react": "^19.2.0",
