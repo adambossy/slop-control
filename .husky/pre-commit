@@ -8,10 +8,58 @@ if ! command -v bun >/dev/null 2>&1; then
 fi
 
 echo "[pre-commit] Formatting code (prettier)..."
-bun run format
+# Get list of staged files before formatting
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx|json|css|md|html|yaml|yml)$' || true)
 
-# Re-stage any files formatted by Prettier
-git add -A
+if [ -z "$STAGED_FILES" ]; then
+  echo "[pre-commit] No staged files to format."
+else
+  # Check if any of the staged files have unstaged changes
+  # We need to stash unstaged changes to format only the staged hunks
+  # git diff (no HEAD) compares working directory vs index (unstaged changes)
+  HAS_UNSTAGED=$(echo "$STAGED_FILES" | while IFS= read -r file; do
+    if [ -n "$file" ] && ! git diff --quiet -- "$file" 2>/dev/null; then
+      echo "yes"
+      break
+    fi
+  done)
+  
+  if [ -z "$HAS_UNSTAGED" ]; then
+    # No unstaged changes in staged files, just format and re-stage
+    echo "$STAGED_FILES" | xargs bunx prettier --write
+    echo "$STAGED_FILES" | xargs git add
+  else
+    # Some staged files have unstaged changes - stash them to isolate formatting
+    # --keep-index keeps staged changes in working directory while stashing unstaged ones
+    STASH_MSG="pre-commit-format-$(date +%s)"
+    STASHED=false
+    
+    # Only stash if there are actually unstaged changes
+    if ! git diff --quiet HEAD 2>/dev/null; then
+      if git stash push --keep-index -m "$STASH_MSG" --quiet 2>/dev/null; then
+        STASHED=true
+      fi
+    fi
+    
+    # Format the staged files (now isolated from unstaged changes)
+    echo "$STAGED_FILES" | xargs bunx prettier --write
+    
+    # Re-stage only the files that were originally staged (now with formatting)
+    echo "$STAGED_FILES" | xargs git add
+    
+    # Restore unstaged changes if we stashed them
+    if [ "$STASHED" = true ]; then
+      # Try to pop with --index to preserve any staging changes
+      if ! git stash pop --quiet --index 2>/dev/null; then
+        # If that fails, try without --index
+        if ! git stash pop --quiet 2>/dev/null; then
+          echo "[pre-commit] Warning: Could not restore unstaged changes. They may be in git stash."
+          git stash list | head -1
+        fi
+      fi
+    fi
+  fi
+fi
 
 echo "[pre-commit] Linting (eslint)..."
 bun run lint
