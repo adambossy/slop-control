@@ -5,58 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Graphviz Architecture Diagram Demo</title>
     <style>
-      body {
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-        background: #f5f5f5;
+        body {
+          font-family:
+            system-ui,
+            -apple-system,
+            sans-serif;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+          background: #f5f5f5;
+        }
+        h1 {
+          color: #333;
+        }
+        .diagram-container {
+          background: white;
+          border-radius: 8px;
+          padding: 1rem;
+          margin: 1rem 0;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #architecture-diagram {
+          width: 100%;
+          min-height: 600px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background: white;
+        }
+        .code-block {
+          background: #1e1e1e;
+          color: #d4d4d4;
+          padding: 1rem;
+          border-radius: 4px;
+          overflow-x: auto;
+          font-family: "Monaco", "Courier New", monospace;
+          font-size: 0.875rem;
+          margin: 1rem 0;
+        }
+        button {
+          background: #007acc;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.875rem;
+          margin-right: 0.5rem;
+        }
+        button:hover {
+          background: #005a9e;
+        }
       }
-      h1 {
-        color: #333;
+      .controls {
+        margin: 1rem 0;
       }
-      .diagram-container {
+      .component-info {
         background: white;
         border-radius: 8px;
         padding: 1rem;
         margin: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
-      #architecture-diagram {
-        width: 100%;
-        min-height: 600px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background: white;
+      .component-info h3 {
+        margin-top: 0;
+        color: #333;
       }
-      .code-block {
-        background: #1e1e1e;
-        color: #d4d4d4;
-        padding: 1rem;
-        border-radius: 4px;
-        overflow-x: auto;
-        font-family: "Monaco", "Courier New", monospace;
+      .component-info #component-details {
+        font-family: monospace;
         font-size: 0.875rem;
-        margin: 1rem 0;
-      }
-      button {
-        background: #007acc;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.875rem;
-        margin-right: 0.5rem;
-      }
-      button:hover {
-        background: #005a9e;
-      }
-      .controls {
-        margin: 1rem 0;
       }
     </style>
     <!-- Using Viz.js with full.render.js (required for browser usage) -->
@@ -78,6 +94,11 @@
 
     <div class="diagram-container">
       <div id="architecture-diagram"></div>
+    </div>
+
+    <div id="component-info" class="component-info" style="display: none">
+      <h3>Component Details</h3>
+      <div id="component-details"></div>
     </div>
 
     <h2>Generated DOT Code</h2>
@@ -367,6 +388,9 @@
               svg.style.height = "auto";
             }
 
+            // Make nodes clickable
+            makeNodesClickable(svg);
+
             console.log("Diagram rendered successfully");
           })
           .catch(function (error) {
@@ -378,6 +402,225 @@
               "try serving it through a local web server instead:<br>" +
               "<code>python3 -m http.server 8000</code> or <code>npx serve</code></div>";
           });
+      }
+
+      // Function to make nodes in the SVG clickable
+      function makeNodesClickable(svg) {
+        if (!svg) return;
+
+        // Find all node groups (Graphviz creates nodes as <g> elements with class "node")
+        const nodes = svg.querySelectorAll("g.node");
+
+        nodes.forEach(function (node) {
+          // Make the node visually clickable
+          node.style.cursor = "pointer";
+
+          // Get the node label/text
+          const textElement = node.querySelector("text");
+          const nodeLabel = textElement ? textElement.textContent : "Unknown";
+
+          // Get the shape/polygon element for hover effects
+          const shape = node.querySelector("polygon, ellipse, path, rect");
+
+          // Get bounding box of the entire node to create a clickable background
+          const bbox = node.getBBox();
+
+          // Create a transparent rectangle that covers the entire node area
+          // This makes the whole component clickable, not just the border/text
+          const clickableBg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect",
+          );
+          clickableBg.setAttribute("x", bbox.x - 10); // Add padding for easier clicking
+          clickableBg.setAttribute("y", bbox.y - 10);
+          clickableBg.setAttribute("width", bbox.width + 20);
+          clickableBg.setAttribute("height", bbox.height + 20);
+          clickableBg.setAttribute("fill", "transparent");
+          clickableBg.setAttribute("stroke", "none");
+          clickableBg.setAttribute("pointer-events", "all");
+          clickableBg.setAttribute("class", "clickable-bg"); // Mark to exclude from shape queries
+          clickableBg.style.cursor = "pointer";
+
+          // Insert the clickable background as the first child (behind everything)
+          node.insertBefore(clickableBg, node.firstChild);
+
+          // Store original styles for hover/click effects
+          if (shape) {
+            // Store original stroke and stroke-width
+            const originalStroke = shape.getAttribute("stroke") || "#000000";
+            const originalStrokeWidth =
+              shape.getAttribute("stroke-width") || "2";
+
+            // Store on the shape element for later use
+            shape.setAttribute("data-original-stroke", originalStroke);
+            shape.setAttribute(
+              "data-original-stroke-width",
+              originalStrokeWidth,
+            );
+
+            // Add rounded corners
+            if (shape.tagName === "rect") {
+              shape.setAttribute("rx", "8");
+              shape.setAttribute("ry", "8");
+            }
+            // Make stroke corners rounded for all shape types
+            shape.setAttribute("stroke-linejoin", "round");
+            shape.setAttribute("stroke-linecap", "round");
+
+            // Add hover effect - change color only, keep same width
+            const handleMouseEnter = function () {
+              // Only change color if not already selected (not orange)
+              const currentStroke = shape.getAttribute("stroke");
+              if (currentStroke !== "#ff6600") {
+                shape.setAttribute("stroke", "#007acc"); // Blue hover color
+                shape.setAttribute("fill-opacity", "0.9");
+              }
+            };
+
+            const handleMouseLeave = function () {
+              // Only reset if not selected
+              const currentStroke = shape.getAttribute("stroke");
+              if (currentStroke !== "#ff6600") {
+                shape.setAttribute("stroke", originalStroke);
+                shape.setAttribute("fill-opacity", "1");
+              }
+            };
+
+            // Add hover effect to the background rectangle
+            clickableBg.addEventListener("mouseenter", handleMouseEnter);
+            clickableBg.addEventListener("mouseleave", handleMouseLeave);
+
+            // Add hover effect to the node itself (for when hovering over shape/text)
+            node.addEventListener("mouseenter", handleMouseEnter);
+            node.addEventListener("mouseleave", handleMouseLeave);
+          }
+
+          // Add click handler to the background rectangle
+          clickableBg.addEventListener("click", function (e) {
+            e.stopPropagation();
+            handleNodeClick(node, nodeLabel);
+          });
+
+          // Add click handler to the node itself (for clicking on shape/text)
+          node.addEventListener("click", function (e) {
+            e.stopPropagation();
+            handleNodeClick(node, nodeLabel);
+          });
+        });
+      }
+
+      // Helper function to handle node clicks
+      function handleNodeClick(node, nodeLabel) {
+        // Get node details
+        const nodeId = node.getAttribute("id") || "unknown";
+        const title = node.querySelector("title");
+        const titleText = title ? title.textContent : nodeLabel;
+
+        // Display component info
+        showComponentInfo({
+          id: nodeId,
+          label: nodeLabel,
+          title: titleText,
+          node: node,
+        });
+
+        // Highlight the clicked node
+        highlightNode(node);
+
+        console.log("Clicked node:", nodeLabel, nodeId);
+      }
+
+      // Function to show component information
+      function showComponentInfo(info) {
+        const infoDiv = document.getElementById("component-info");
+        const detailsDiv = document.getElementById("component-details");
+
+        if (!infoDiv || !detailsDiv) return;
+
+        detailsDiv.innerHTML = `
+          <strong>ID:</strong> ${info.id}<br>
+          <strong>Label:</strong> ${info.label}<br>
+          <strong>Title:</strong> ${info.title || "N/A"}<br>
+          <strong>Type:</strong> ${info.node.classList.contains("node") ? "Node" : "Unknown"}
+        `;
+
+        infoDiv.style.display = "block";
+      }
+
+      // Function to highlight a clicked node
+      function highlightNode(node) {
+        // Helper function to get the actual shape (exclude clickable background)
+        // Only select shapes that are NOT the clickable background
+        function getActualShape(n) {
+          // Query for all potential shape elements
+          const shapes = n.querySelectorAll("polygon, ellipse, path, rect");
+          // Return the first shape that is NOT the clickable background
+          for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            // Explicitly exclude clickable-bg by checking class and ensuring it's not the transparent background
+            if (!shape.classList || !shape.classList.contains("clickable-bg")) {
+              // Also check if it's a visible shape (has a visible stroke or fill)
+              const fill = shape.getAttribute("fill");
+              const stroke = shape.getAttribute("stroke");
+              // If it's transparent and has no stroke, it's likely the clickable bg
+              if (fill === "transparent" && (!stroke || stroke === "none")) {
+                continue; // Skip transparent backgrounds
+              }
+              return shape;
+            }
+          }
+          return null;
+        }
+
+        // Remove previous highlights from all nodes
+        const allNodes = document.querySelectorAll("g.node");
+        allNodes.forEach(function (n) {
+          const shape = getActualShape(n);
+          if (shape) {
+            const originalStroke =
+              shape.getAttribute("data-original-stroke") || "#000000";
+            const originalStrokeWidth =
+              shape.getAttribute("data-original-stroke-width") || "2";
+            shape.setAttribute("stroke", originalStroke);
+            shape.setAttribute("stroke-width", originalStrokeWidth);
+            shape.setAttribute("fill-opacity", "1");
+            // Keep rounded corners
+            shape.setAttribute("stroke-linejoin", "round");
+            shape.setAttribute("stroke-linecap", "round");
+          }
+        });
+
+        // Highlight clicked node - single border only
+        const shape = getActualShape(node);
+        if (shape) {
+          // Store original stroke if not already stored
+          if (!shape.getAttribute("data-original-stroke")) {
+            shape.setAttribute(
+              "data-original-stroke",
+              shape.getAttribute("stroke") || "#000000",
+            );
+            shape.setAttribute(
+              "data-original-stroke-width",
+              shape.getAttribute("stroke-width") || "2",
+            );
+          }
+
+          // Apply selection highlight - orange border, same width (not double)
+          const originalStrokeWidth =
+            shape.getAttribute("data-original-stroke-width") || "2";
+          shape.setAttribute("stroke", "#ff6600"); // Orange for selection
+          // Use the original width, don't make it thicker to avoid double border appearance
+          shape.setAttribute("stroke-width", originalStrokeWidth);
+          shape.setAttribute("fill-opacity", "1");
+
+          // Ensure rounded corners
+          if (shape.tagName === "rect") {
+            shape.setAttribute("rx", "8");
+            shape.setAttribute("ry", "8");
+          }
+          shape.setAttribute("stroke-linejoin", "round");
+          shape.setAttribute("stroke-linecap", "round");
+        }
       }
     </script>
 
