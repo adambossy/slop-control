@@ -42,12 +42,30 @@ Produce a single diagram that captures the system's most important structural an
    - Provide a short legend and concise callouts for complex edges.
    - Offer a paragraph summary explaining how to read the diagram and the key takeaways.
 
-7. Process
+7. Mermaid Label Syntax Requirements (CRITICAL - MUST FOLLOW)
+   - **NEVER use unquoted labels containing special characters.** This will cause parse errors and the diagram will fail validation.
+   - Labels containing ANY special characters (parentheses, slashes, hyphens, spaces, colons, commas, etc.) MUST be wrapped in double quotes.
+   - **INCORRECT (will fail):**
+     - \`A[Presentation (CLI/UI)]\`
+     - \`B[Cloud-Name]\`
+     - \`C[Service: API]\`
+   - **CORRECT (required format):**
+     - \`A["Presentation (CLI/UI)"]\`
+     - \`B["Cloud-Name"]\`
+     - \`C["Service: API"]\`
+   - **Safe labels (no quotes needed):**
+     - \`D[User]\`
+     - \`E[Database]\`
+     - \`F[API_Service]\`
+   - When in doubt, wrap the label in double quotes. It is always safe to quote labels.
+   - This syntax rule applies to ALL node labels, edge labels, and any text content in the diagram.
+
+8. Process
    - Thoroughly scan directories and code to understand responsibilities before diagramming.
    - Validate assumptions against comments, docs, and configuration files.
    - If ambiguity remains, state assumptions explicitly in the summary.
 
-8. Deliverables
+9. Deliverables
    - First, produce an outline listing the components, data stores, external systems, and interactions you plan to depict.
    - Wait for confirmation before generating the final diagram.
    - After confirmation, output:

@@ -127,6 +127,13 @@ async function validateAndCorrectMermaidDiagram(
 **Error from Mermaid parser:**
 ${errorMessage}
 
+**CRITICAL: Mermaid Label Syntax Requirements**
+- Labels containing ANY special characters (parentheses, slashes, hyphens, spaces, colons, commas, etc.) MUST be wrapped in double quotes.
+- **INCORRECT:** \`A[Presentation (CLI/UI)]\` will cause parse errors
+- **CORRECT:** \`A["Presentation (CLI/UI)"]\` (with double quotes around the label)
+- When in doubt, wrap labels in double quotes. This is especially important if you see parse errors mentioning unexpected characters.
+- This applies to ALL node labels, edge labels, and text content in the diagram.
+
 Please provide the corrected Mermaid diagram code. Output ONLY the corrected diagram wrapped in \`\`\`mermaid code blocks, with no additional explanation.`;
 
       // Create new conversation with full history + correction request
