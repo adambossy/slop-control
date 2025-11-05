@@ -22,10 +22,10 @@ async function main() {
 
   if (!repoUrl) {
     console.error(
-      "Usage: bun run scripts/generate-promptorium-diagram.ts <repo-url>",
+      "Usage: bun run scripts/generate-architecture-diagram.ts <repo-url>",
     );
     console.error(
-      "Example: bun run scripts/generate-promptorium-diagram.ts https://github.com/adambossy/promptorium",
+      "Example: bun run scripts/generate-architecture-diagram.ts https://github.com/adambossy/promptorium",
     );
     process.exit(1);
   }
@@ -66,3 +66,4 @@ ${mermaidDiagram}
 }
 
 main();
+
