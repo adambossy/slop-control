@@ -114,6 +114,10 @@ async function validateAndCorrectMermaidDiagram(
       const errorMessage =
         error instanceof Error ? error.message : String(error);
 
+      console.error(
+        `Failed to generate valid Mermaid diagram on this iteration. Error: ${errorMessage}`,
+      );
+
       // If this is the last attempt, throw the error
       if (attempt === maxRetries - 1) {
         throw new Error(
