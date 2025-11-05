@@ -107,7 +107,7 @@ async function validateAndCorrectMermaidDiagram(
       );
       // Validate the diagram using mermaid.parse()
       // parse() throws if invalid and suppressErrors is false
-      mermaid.parse(diagram, { suppressErrors: false });
+      await mermaid.parse(diagram, { suppressErrors: false });
       // If validation succeeds, return the diagram
       return diagram;
     } catch (error) {
