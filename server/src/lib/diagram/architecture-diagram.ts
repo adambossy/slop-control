@@ -1,5 +1,8 @@
 import OpenAI from "openai";
 import { z } from "zod";
+// Import DOMPurify preload first to initialize globals and DOMPurify before mermaid loads
+// This ensures DOM globals are set up and DOMPurify is initialized before mermaid imports it
+import "../../shims/preload-dompurify.js";
 import mermaid from "mermaid";
 import type { EnsureRepoAtRefParams } from "@slop/github-repo-snapshot";
 import { concatenateFiles } from "@slop/github-repo-snapshot";
@@ -46,7 +49,9 @@ function ensureClient(client: OpenAI | undefined): OpenAI {
   if (!apiKey) {
     throw new Error("Missing OPENAI_API_KEY environment variable.");
   }
-  return new OpenAI({ apiKey });
+  // Allow browser-like environment detection since we set up window/document for DOMPurify
+  // This is safe because we're running server-side, not in an actual browser
+  return new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
 }
 
 function extractTextFromResponse(result: ResponsesResult): string {
