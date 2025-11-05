@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Graphviz Architecture Diagram Demo</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #f5f5f5;
+      }
+      h1 {
+        color: #333;
+      }
+      .diagram-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      #architecture-diagram {
+        width: 100%;
+        min-height: 600px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+      }
+      .code-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-family: "Monaco", "Courier New", monospace;
+        font-size: 0.875rem;
+        margin: 1rem 0;
+      }
+      button {
+        background: #007acc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+      }
+      button:hover {
+        background: #005a9e;
+      }
+      .controls {
+        margin: 1rem 0;
+      }
+    </style>
+    <!-- Using Viz.js with full.render.js (required for browser usage) -->
+    <script src="https://unpkg.com/viz.js@2.1.2/viz.js"></script>
+    <script src="https://unpkg.com/viz.js@2.1.2/full.render.js"></script>
+  </head>
+  <body>
+    <h1>Graphviz Architecture Diagram Demo</h1>
+    <p>
+      This example shows how to use <code>ts-graphviz</code> (or manual DOT
+      generation) to create and render architecture diagrams in the browser.
+    </p>
+
+    <div class="controls">
+      <button onclick="renderExample1()">Layered Architecture</button>
+      <button onclick="renderExample2()">Microservices Architecture</button>
+      <button onclick="renderExample3()">Component Diagram</button>
+    </div>
+
+    <div class="diagram-container">
+      <div id="architecture-diagram"></div>
+    </div>
+
+    <h2>Generated DOT Code</h2>
+    <pre class="code-block" id="dot-code"></pre>
+
+    <script>
+      // Wait for Viz.js and full.render.js to load
+      window.addEventListener("load", function () {
+        // Wait a bit longer for full.render.js to initialize Module and render
+        setTimeout(function () {
+          // Check what's available
+          console.log("Viz:", typeof Viz);
+          console.log("Module:", typeof Module);
+          console.log("render:", typeof render);
+
+          // Try to create instance early to catch any errors
+          const viz = getVizInstance();
+          if (viz) {
+            console.log("Viz instance ready");
+          } else {
+            console.warn(
+              "Could not create Viz instance yet, will retry on render",
+            );
+          }
+
+          // Render initial example
+          if (typeof renderExample1 === "function") {
+            renderExample1();
+          }
+        }, 500); // Give more time for full.render.js to load
+      });
+
+      // For this browser demo, we'll generate DOT strings manually
+      // In a real TypeScript project with ts-graphviz, you'd import and use the library
+
+      // Example: Layered Architecture
+      function generateLayeredArchitectureDot() {
+        return `digraph layered_architecture {
+        rankdir=TB;
+        node [shape=box, style=rounded];
+        
+        // Presentation Layer
+        subgraph cluster_presentation {
+          label="Presentation Layer";
+          style=filled;
+          fillcolor="#e1f5ff";
+          UI [label="User Interface"];
+          API [label="REST API"];
+        }
+        
+        // Application Layer
+        subgraph cluster_application {
+          label="Application Layer";
+          style=filled;
+          fillcolor="#fff4e1";
+          Service1 [label="Auth Service"];
+          Service2 [label="Business Service"];
+          Service3 [label="Notification Service"];
+        }
+        
+        // Domain Layer
+        subgraph cluster_domain {
+          label="Domain Layer";
+          style=filled;
+          fillcolor="#e1ffe1";
+          Domain1 [label="User Domain"];
+          Domain2 [label="Product Domain"];
+          Domain3 [label="Order Domain"];
+        }
+        
+        // Infrastructure Layer
+        subgraph cluster_infrastructure {
+          label="Infrastructure Layer";
+          style=filled;
+          fillcolor="#ffe1f5";
+          DB [label="Database"];
+          Cache [label="Redis Cache"];
+          Queue [label="Message Queue"];
+        }
+        
+        // Connections
+        UI -> API;
+        API -> Service1;
+        API -> Service2;
+        API -> Service3;
+        Service1 -> Domain1;
+        Service2 -> Domain2;
+        Service3 -> Domain3;
+        Service1 -> DB;
+        Service2 -> DB;
+        Service2 -> Cache;
+        Service3 -> Queue;
+      }`;
+      }
+
+      // Example: Microservices Architecture
+      function generateMicroservicesDot() {
+        return `digraph microservices {
+        rankdir=LR;
+        node [shape=box, style=rounded];
+        
+        Gateway [label="API Gateway", shape=doubleoctagon, style="rounded,filled", fillcolor="#ffcccc"];
+        
+        subgraph cluster_frontend {
+          label="Frontend";
+          WebApp [label="Web App"];
+          MobileApp [label="Mobile App"];
+        }
+        
+        subgraph cluster_services {
+          label="Microservices";
+          UserService [label="User Service", fillcolor="#cce5ff", style="rounded,filled"];
+          ProductService [label="Product Service", fillcolor="#cce5ff", style="rounded,filled"];
+          OrderService [label="Order Service", fillcolor="#cce5ff", style="rounded,filled"];
+          PaymentService [label="Payment Service", fillcolor="#cce5ff", style="rounded,filled"];
+        }
+        
+        subgraph cluster_data {
+          label="Data Layer";
+          UserDB [label="User DB", shape=cylinder, fillcolor="#ffffcc", style=filled];
+          ProductDB [label="Product DB", shape=cylinder, fillcolor="#ffffcc", style=filled];
+          OrderDB [label="Order DB", shape=cylinder, fillcolor="#ffffcc", style=filled];
+          EventBus [label="Event Bus", shape=doublecircle, fillcolor="#ccffcc", style=filled];
+        }
+        
+        WebApp -> Gateway;
+        MobileApp -> Gateway;
+        Gateway -> UserService;
+        Gateway -> ProductService;
+        Gateway -> OrderService;
+        OrderService -> PaymentService;
+        UserService -> UserDB;
+        ProductService -> ProductDB;
+        OrderService -> OrderDB;
+        UserService -> EventBus;
+        ProductService -> EventBus;
+        OrderService -> EventBus;
+        PaymentService -> EventBus;
+      }`;
+      }
+
+      // Example: Component Diagram
+      function generateComponentDot() {
+        return `digraph component_diagram {
+        rankdir=TB;
+        node [shape=box];
+        
+        // Main Application
+        App [label="Main Application", shape=component, style=filled, fillcolor="#e1f5ff"];
+        
+        // Core Components
+        Router [label="Router Component", shape=component];
+        Auth [label="Authentication Component", shape=component, fillcolor="#ffcccc", style=filled];
+        Controller [label="Controller Component", shape=component];
+        
+        // Services
+        UserService [label="User Service", shape=folder, fillcolor="#ffffcc", style=filled];
+        DataService [label="Data Service", shape=folder, fillcolor="#ffffcc", style=filled];
+        
+        // External Dependencies
+        Database [label="Database", shape=cylinder, fillcolor="#ccffcc", style=filled];
+        ExternalAPI [label="External API", shape=box3d, fillcolor="#ffccff", style=filled];
+        
+        // Connections
+        App -> Router;
+        Router -> Auth;
+        Router -> Controller;
+        Controller -> UserService;
+        Controller -> DataService;
+        UserService -> Database;
+        DataService -> ExternalAPI;
+        Auth -> UserService;
+        
+        // Ports (interfaces)
+        Router -> Controller [label="routes"];
+        Controller -> UserService [label="uses"];
+      }`;
+      }
+
+      // Make functions globally available
+      window.renderExample1 = function () {
+        const dot = generateLayeredArchitectureDot();
+        renderDot(dot);
+      };
+
+      window.renderExample2 = function () {
+        const dot = generateMicroservicesDot();
+        renderDot(dot);
+      };
+
+      window.renderExample3 = function () {
+        const dot = generateComponentDot();
+        renderDot(dot);
+      };
+
+      // Create a single Viz instance
+      let vizInstance = null;
+      let vizInstancePromise = null;
+
+      function getVizInstance() {
+        // Return existing instance if available
+        if (vizInstance) {
+          return Promise.resolve(vizInstance);
+        }
+
+        // Return existing promise if we're already creating one
+        if (vizInstancePromise) {
+          return vizInstancePromise;
+        }
+
+        // Create new promise to initialize Viz
+        vizInstancePromise = new Promise(function (resolve, reject) {
+          if (typeof Viz === "undefined") {
+            reject(new Error("Viz.js not loaded"));
+            return;
+          }
+
+          // Check if Module and render are available (from full.render.js)
+          if (typeof Module !== "undefined" && typeof render !== "undefined") {
+            try {
+              vizInstance = new Viz({ Module, render });
+              console.log("Created Viz instance with Module and render");
+              resolve(vizInstance);
+              return;
+            } catch (error) {
+              reject(error);
+              return;
+            }
+          }
+
+          // For file:// protocol, create a blob URL for the worker
+          // This allows workers to work with local files
+          fetch("https://unpkg.com/viz.js@2.1.2/full.render.js")
+            .then(function (response) {
+              return response.text();
+            })
+            .then(function (workerCode) {
+              const blob = new Blob([workerCode], {
+                type: "application/javascript",
+              });
+              const workerURL = URL.createObjectURL(blob);
+              vizInstance = new Viz({ workerURL });
+              console.log("Created Viz instance with blob worker URL");
+              resolve(vizInstance);
+            })
+            .catch(function (error) {
+              console.error("Error creating worker from blob:", error);
+              reject(error);
+            });
+        });
+
+        return vizInstancePromise;
+      }
+
+      function renderDot(dotString) {
+        // Display the DOT code
+        document.getElementById("dot-code").textContent = dotString;
+
+        // Check if Viz is available
+        if (typeof Viz === "undefined") {
+          document.getElementById("architecture-diagram").innerHTML =
+            '<div style="padding: 2rem; color: red;">Error: Viz.js not loaded</div>';
+          return;
+        }
+
+        // Show loading message
+        document.getElementById("architecture-diagram").innerHTML =
+          '<div style="padding: 2rem; text-align: center;">Rendering diagram...</div>';
+
+        // Get or create Viz instance (async)
+        getVizInstance()
+          .then(function (viz) {
+            // Render using the instance (async)
+            return viz.renderString(dotString, {
+              format: "svg",
+              engine: "dot",
+            });
+          })
+          .then(function (svgString) {
+            const container = document.getElementById("architecture-diagram");
+            container.innerHTML = svgString;
+
+            // Make the SVG responsive
+            const svg = container.querySelector("svg");
+            if (svg) {
+              svg.style.maxWidth = "100%";
+              svg.style.height = "auto";
+            }
+
+            console.log("Diagram rendered successfully");
+          })
+          .catch(function (error) {
+            console.error("Error rendering diagram:", error);
+            document.getElementById("architecture-diagram").innerHTML =
+              '<div style="padding: 2rem; color: red;">Error rendering diagram: ' +
+              error.message +
+              "<br><br><strong>Note:</strong> If you're opening this file directly (file://), " +
+              "try serving it through a local web server instead:<br>" +
+              "<code>python3 -m http.server 8000</code> or <code>npx serve</code></div>";
+          });
+      }
+    </script>
+
+    <h2>Using ts-graphviz in a TypeScript Project</h2>
+    <p>
+      In a real TypeScript project, you would use <code>ts-graphviz</code> to
+      generate DOT, then render with Viz.js:
+    </p>
+    <pre class="code-block">
+// Install: npm install ts-graphviz @ts-graphviz/adapter viz.js
+
+import { digraph, node, edge, attribute, toDot } from 'ts-graphviz';
+import Viz from 'viz.js';
+import { Module, render } from 'viz.js/full.render.js';
+
+// Create a Viz instance
+const viz = new Viz({ Module, render });
+
+// Create diagram programmatically
+const G = digraph('architecture', (g) => {
+  g.set(attribute.label, 'Layered Architecture');
+  g.set(attribute.rankdir, 'TB');
+  
+  // Create nodes
+  const ui = node('UI', {
+    [attribute.label]: 'User Interface',
+    [attribute.shape]: 'box',
+    [attribute.style]: 'rounded'
+  });
+  
+  const api = node('API', {
+    [attribute.label]: 'REST API',
+    [attribute.shape]: 'box'
+  });
+  
+  const service = node('Service', {
+    [attribute.label]: 'Business Service',
+    [attribute.shape]: 'box',
+    [attribute.style]: 'filled',
+    [attribute.fillcolor]: '#fff4e1'
+  });
+  
+  // Add nodes and edges
+  g.addNode(ui);
+  g.addNode(api);
+  g.addNode(service);
+  g.addEdge(edge([ui, api]));
+  g.addEdge(edge([api, service]));
+});
+
+// Convert to DOT string
+const dotString = toDot(G);
+
+// Render using Viz.js (no d3 needed!)
+const svgString = await viz.renderString(dotString, { format: 'svg', engine: 'dot' });
+document.getElementById('diagram').innerHTML = svgString;</pre
+    >
+
+    <h2>Alternative: Other Libraries</h2>
+    <p>You can also use other libraries instead of Viz.js:</p>
+    <ul>
+      <li>
+        <strong>@hpcc-js/wasm</strong> - Modern WebAssembly-based Graphviz
+        (smaller, faster)
+      </li>
+      <li>
+        <strong>Server-side rendering</strong> - Use the Graphviz command-line
+        tool on your server
+      </li>
+      <li>
+        <strong>Cytoscape.js</strong> - For interactive graph visualization (you
+        already have this!)
+      </li>
+      <li>
+        <strong>Dagre</strong> - For hierarchical layouts (you already have
+        this!)
+      </li>
+    </ul>
+  </body>
+</html>
