@@ -459,6 +459,29 @@
               textElement.setAttribute("data-original-fill", originalTextFill);
             }
 
+            // Store original background fill color and set lighter background
+            const originalFill = shape.getAttribute("fill") || "#ffffff";
+            // Determine lighter background color based on border color
+            // For black/dark borders, use light gray; preserve colored fills if already set
+            let lightBackground;
+            if (
+              originalFill === "#ffffff" ||
+              originalFill === "none" ||
+              !originalFill ||
+              originalFill === "white"
+            ) {
+              // Default to light gray for dark borders
+              lightBackground = "#f5f5f5";
+            } else {
+              // If already has a fill color, use it (might be from Graphviz)
+              lightBackground = originalFill;
+            }
+
+            // Store original fill for restoration
+            shape.setAttribute("data-original-fill", lightBackground);
+            // Set the lighter background
+            shape.setAttribute("fill", lightBackground);
+
             // Set and lock the stroke-width to a consistent value for all components
             shape.setAttribute("stroke-width", CONSISTENT_STROKE_WIDTH);
 
@@ -478,15 +501,20 @@
             shape.setAttribute("stroke-linejoin", "round");
             shape.setAttribute("stroke-linecap", "round");
 
+            // Color scheme: lighter backgrounds for each state
+            const LIGHT_BLUE_BG = "#e6f2ff"; // Light blue background for hover
+            const LIGHT_ORANGE_BG = "#fff4e6"; // Light orange background for selected
+
             // Add hover effect - change color ONLY, never change width
-            // Text and border must ALWAYS match
+            // Text, border, and background must ALWAYS match their state
             const handleMouseEnter = function () {
               // Only change color if not already selected (not orange)
               const currentStroke = shape.getAttribute("stroke");
               if (currentStroke !== "#ff6600") {
                 shape.setAttribute("stroke", "#007acc"); // Blue hover color
                 // DO NOT change stroke-width - it stays CONSISTENT_STROKE_WIDTH
-                shape.setAttribute("fill-opacity", "0.9");
+                shape.setAttribute("fill", LIGHT_BLUE_BG); // Light blue background
+                shape.setAttribute("fill-opacity", "1");
                 // Text must match border - set to same blue
                 if (textElement) {
                   textElement.setAttribute("fill", "#007acc"); // Same blue as border
@@ -495,10 +523,12 @@
             };
 
             const handleMouseLeave = function () {
-              // Text and border must ALWAYS match
+              // Text, border, and background must ALWAYS match their state
               const currentStroke = shape.getAttribute("stroke");
               if (currentStroke === "#ff6600") {
-                // Component is selected - keep text orange to match orange border
+                // Component is selected - keep orange theme
+                shape.setAttribute("fill", LIGHT_ORANGE_BG); // Light orange background
+                shape.setAttribute("fill-opacity", "1");
                 if (textElement) {
                   textElement.setAttribute("fill", "#ff6600"); // Match orange border
                 }
@@ -506,6 +536,9 @@
                 // Component is not selected - restore to original colors
                 shape.setAttribute("stroke", originalStroke);
                 // DO NOT change stroke-width - it stays CONSISTENT_STROKE_WIDTH
+                const originalBg =
+                  shape.getAttribute("data-original-fill") || lightBackground;
+                shape.setAttribute("fill", originalBg); // Restore original background
                 shape.setAttribute("fill-opacity", "1");
                 // Text must match border - restore to original
                 if (textElement) {
@@ -612,6 +645,7 @@
 
         // Use the same consistent stroke-width for all components
         const CONSISTENT_STROKE_WIDTH = "2";
+        const LIGHT_ORANGE_BG = "#fff4e6"; // Light orange background for selected
 
         // Remove previous highlights from all nodes
         const allNodes = document.querySelectorAll("g.node");
@@ -623,6 +657,10 @@
             shape.setAttribute("stroke", originalStroke);
             // NEVER change stroke-width - always use the consistent value
             shape.setAttribute("stroke-width", CONSISTENT_STROKE_WIDTH);
+            // Restore original background
+            const originalBg =
+              shape.getAttribute("data-original-fill") || "#f5f5f5";
+            shape.setAttribute("fill", originalBg);
             shape.setAttribute("fill-opacity", "1");
             // Keep rounded corners
             shape.setAttribute("stroke-linejoin", "round");
@@ -657,6 +695,8 @@
           shape.setAttribute("stroke", "#ff6600"); // Orange for selection
           // NEVER change stroke-width - always use the consistent value
           shape.setAttribute("stroke-width", CONSISTENT_STROKE_WIDTH);
+          // Set light orange background to match orange theme
+          shape.setAttribute("fill", LIGHT_ORANGE_BG);
           shape.setAttribute("fill-opacity", "1");
 
           // Ensure rounded corners
