@@ -5,56 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Graphviz Architecture Diagram Demo</title>
     <style>
-        body {
-          font-family:
-            system-ui,
-            -apple-system,
-            sans-serif;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 2rem;
-          background: #f5f5f5;
-        }
-        h1 {
-          color: #333;
-        }
-        .diagram-container {
-          background: white;
-          border-radius: 8px;
-          padding: 1rem;
-          margin: 1rem 0;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        #architecture-diagram {
-          width: 100%;
-          min-height: 600px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          background: white;
-        }
-        .code-block {
-          background: #1e1e1e;
-          color: #d4d4d4;
-          padding: 1rem;
-          border-radius: 4px;
-          overflow-x: auto;
-          font-family: "Monaco", "Courier New", monospace;
-          font-size: 0.875rem;
-          margin: 1rem 0;
-        }
-        button {
-          background: #007acc;
-          color: white;
-          border: none;
-          padding: 0.5rem 1rem;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 0.875rem;
-          margin-right: 0.5rem;
-        }
-        button:hover {
-          background: #005a9e;
-        }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #f5f5f5;
+      }
+      h1 {
+        color: #333;
+      }
+      .diagram-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      #architecture-diagram {
+        width: 100%;
+        min-height: 600px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+      }
+      .code-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-family: "Monaco", "Courier New", monospace;
+        font-size: 0.875rem;
+        margin: 1rem 0;
+      }
+      button {
+        background: #007acc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+      }
+      button:hover {
+        background: #005a9e;
       }
       .controls {
         margin: 1rem 0;
@@ -64,7 +63,7 @@
         border-radius: 8px;
         padding: 1rem;
         margin: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
       .component-info h3 {
         margin-top: 0;
@@ -446,16 +445,28 @@
 
           // Store original styles for hover/click effects
           if (shape) {
-            // Store original stroke and stroke-width
+            // Use a single consistent stroke-width for ALL components
+            const CONSISTENT_STROKE_WIDTH = "2";
+
+            // Store original stroke color
             const originalStroke = shape.getAttribute("stroke") || "#000000";
-            const originalStrokeWidth =
-              shape.getAttribute("stroke-width") || "2";
+
+            // Store original text fill color if text element exists
+            if (textElement) {
+              const originalTextFill =
+                textElement.getAttribute("fill") || "#000000";
+              // Store original text fill for later restoration
+              textElement.setAttribute("data-original-fill", originalTextFill);
+            }
+
+            // Set and lock the stroke-width to a consistent value for all components
+            shape.setAttribute("stroke-width", CONSISTENT_STROKE_WIDTH);
 
             // Store on the shape element for later use
             shape.setAttribute("data-original-stroke", originalStroke);
             shape.setAttribute(
               "data-original-stroke-width",
-              originalStrokeWidth,
+              CONSISTENT_STROKE_WIDTH,
             );
 
             // Add rounded corners
@@ -467,32 +478,59 @@
             shape.setAttribute("stroke-linejoin", "round");
             shape.setAttribute("stroke-linecap", "round");
 
-            // Add hover effect - change color only, keep same width
+            // Add hover effect - change color ONLY, never change width
+            // Text and border must ALWAYS match
             const handleMouseEnter = function () {
               // Only change color if not already selected (not orange)
               const currentStroke = shape.getAttribute("stroke");
               if (currentStroke !== "#ff6600") {
                 shape.setAttribute("stroke", "#007acc"); // Blue hover color
+                // DO NOT change stroke-width - it stays CONSISTENT_STROKE_WIDTH
                 shape.setAttribute("fill-opacity", "0.9");
+                // Text must match border - set to same blue
+                if (textElement) {
+                  textElement.setAttribute("fill", "#007acc"); // Same blue as border
+                }
               }
             };
 
             const handleMouseLeave = function () {
-              // Only reset if not selected
+              // Text and border must ALWAYS match
               const currentStroke = shape.getAttribute("stroke");
-              if (currentStroke !== "#ff6600") {
+              if (currentStroke === "#ff6600") {
+                // Component is selected - keep text orange to match orange border
+                if (textElement) {
+                  textElement.setAttribute("fill", "#ff6600"); // Match orange border
+                }
+              } else {
+                // Component is not selected - restore to original colors
                 shape.setAttribute("stroke", originalStroke);
+                // DO NOT change stroke-width - it stays CONSISTENT_STROKE_WIDTH
                 shape.setAttribute("fill-opacity", "1");
+                // Text must match border - restore to original
+                if (textElement) {
+                  const originalTextFill =
+                    textElement.getAttribute("data-original-fill") || "#000000";
+                  textElement.setAttribute("fill", originalTextFill); // Match original border color
+                }
               }
             };
 
-            // Add hover effect to the background rectangle
+            // Add hover effect to all parts of the component
             clickableBg.addEventListener("mouseenter", handleMouseEnter);
             clickableBg.addEventListener("mouseleave", handleMouseLeave);
-
-            // Add hover effect to the node itself (for when hovering over shape/text)
             node.addEventListener("mouseenter", handleMouseEnter);
             node.addEventListener("mouseleave", handleMouseLeave);
+            // Also attach to the shape itself for hover over the diagram
+            if (shape) {
+              shape.addEventListener("mouseenter", handleMouseEnter);
+              shape.addEventListener("mouseleave", handleMouseLeave);
+            }
+            // Also attach to text element for hover over labels
+            if (textElement) {
+              textElement.addEventListener("mouseenter", handleMouseEnter);
+              textElement.addEventListener("mouseleave", handleMouseLeave);
+            }
           }
 
           // Add click handler to the background rectangle
@@ -572,6 +610,9 @@
           return null;
         }
 
+        // Use the same consistent stroke-width for all components
+        const CONSISTENT_STROKE_WIDTH = "2";
+
         // Remove previous highlights from all nodes
         const allNodes = document.querySelectorAll("g.node");
         allNodes.forEach(function (n) {
@@ -579,18 +620,25 @@
           if (shape) {
             const originalStroke =
               shape.getAttribute("data-original-stroke") || "#000000";
-            const originalStrokeWidth =
-              shape.getAttribute("data-original-stroke-width") || "2";
             shape.setAttribute("stroke", originalStroke);
-            shape.setAttribute("stroke-width", originalStrokeWidth);
+            // NEVER change stroke-width - always use the consistent value
+            shape.setAttribute("stroke-width", CONSISTENT_STROKE_WIDTH);
             shape.setAttribute("fill-opacity", "1");
             // Keep rounded corners
             shape.setAttribute("stroke-linejoin", "round");
             shape.setAttribute("stroke-linecap", "round");
+
+            // Text and border must always match - restore text to match border
+            const textEl = n.querySelector("text");
+            if (textEl) {
+              const originalTextFill =
+                textEl.getAttribute("data-original-fill") || "#000000";
+              textEl.setAttribute("fill", originalTextFill); // Match original border color
+            }
           }
         });
 
-        // Highlight clicked node - single border only
+        // Highlight clicked node - change color ONLY, never change width
         const shape = getActualShape(node);
         if (shape) {
           // Store original stroke if not already stored
@@ -601,16 +649,14 @@
             );
             shape.setAttribute(
               "data-original-stroke-width",
-              shape.getAttribute("stroke-width") || "2",
+              CONSISTENT_STROKE_WIDTH,
             );
           }
 
-          // Apply selection highlight - orange border, same width (not double)
-          const originalStrokeWidth =
-            shape.getAttribute("data-original-stroke-width") || "2";
+          // Apply selection highlight - orange border, same width (never change width)
           shape.setAttribute("stroke", "#ff6600"); // Orange for selection
-          // Use the original width, don't make it thicker to avoid double border appearance
-          shape.setAttribute("stroke-width", originalStrokeWidth);
+          // NEVER change stroke-width - always use the consistent value
+          shape.setAttribute("stroke-width", CONSISTENT_STROKE_WIDTH);
           shape.setAttribute("fill-opacity", "1");
 
           // Ensure rounded corners
@@ -620,6 +666,19 @@
           }
           shape.setAttribute("stroke-linejoin", "round");
           shape.setAttribute("stroke-linecap", "round");
+
+          // Text and border must always match - set text to orange to match border
+          const textEl = node.querySelector("text");
+          if (textEl) {
+            // Store original text fill if not already stored
+            if (!textEl.getAttribute("data-original-fill")) {
+              textEl.setAttribute(
+                "data-original-fill",
+                textEl.getAttribute("fill") || "#000000",
+              );
+            }
+            textEl.setAttribute("fill", "#ff6600"); // Match orange border color
+          }
         }
       }
     </script>
