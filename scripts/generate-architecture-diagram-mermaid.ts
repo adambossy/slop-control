@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { generateRepoArchitectureDiagram } from "../server/src/lib/diagram/architecture-diagram.js";
+import { generateRepoArchitectureDiagram } from "../server/src/lib/diagram/architecture-diagram-mermaid.js";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -22,10 +22,10 @@ async function main() {
 
   if (!repoUrl) {
     console.error(
-      "Usage: bun run scripts/generate-architecture-diagram.ts <repo-url>",
+      "Usage: bun run scripts/generate-architecture-diagram-mermaid.ts <repo-url>",
     );
     console.error(
-      "Example: bun run scripts/generate-architecture-diagram.ts https://github.com/adambossy/promptorium",
+      "Example: bun run scripts/generate-architecture-diagram-mermaid.ts https://github.com/adambossy/promptorium",
     );
     process.exit(1);
   }
@@ -66,4 +66,3 @@ ${mermaidDiagram}
 }
 
 main();
-

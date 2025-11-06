@@ -6,7 +6,7 @@ import "../../shims/preload-dompurify.js";
 import mermaid from "mermaid";
 import type { EnsureRepoAtRefParams } from "@slop/github-repo-snapshot";
 import { concatenateFiles } from "@slop/github-repo-snapshot";
-import { buildArchitecturePrompt } from "./architecture-prompt.js";
+import { buildArchitecturePrompt } from "./architecture-prompt-mermaid.js";
 
 export type GenerateRepoArchitectureDiagramParams = EnsureRepoAtRefParams & {
   /** Override the OpenAI model identifier. */
