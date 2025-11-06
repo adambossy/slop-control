@@ -45,25 +45,24 @@ Produce a single diagram that captures the system's most important structural an
 7. Graphviz DOT Syntax Requirements (CRITICAL - MUST FOLLOW)
    - **Directed graphs:** Use \`digraph G {\` to start a directed graph
    - **Undirected graphs:** Use \`graph G {\` to start an undirected graph
-   - **Node IDs:** Must be valid identifiers (letters, numbers, underscores) or quoted strings. Examples: \`node1\`, \`"Node Name"\`, \`API_Service\`
-   - **Node labels:** Labels containing special characters (parentheses, slashes, hyphens, spaces, colons, commas, etc.) MUST be quoted. Use \`[label="Node Label"]\` syntax.
+   - **Node IDs:** Must be valid identifiers (letters, numbers, underscores) or double-quoted strings. Examples: \`node1\`, \`"Node Name"\`, \`API_Service\`
+   - **Attribute values (labels, colors, etc.):** 
+     - Simple alphanumeric identifiers without special characters MAY be unquoted: \`label=Database\`
+     - Any value containing special characters (parentheses, slashes, hyphens, spaces, colons, commas, quotes, etc.) MUST be double-quoted: \`label="My Label"\`
+     - **Best practice: Always use double quotes for string attribute values** to avoid syntax errors
    - **INCORRECT (will fail):**
-     - \`node1[label=Presentation (CLI/UI)]\`
-     - \`node2[label=Cloud-Name]\`
-     - \`node3[label=Service: API]\`
-   - **CORRECT (required format):**
-     - \`node1[label="Presentation (CLI/UI)"]\`
-     - \`node2[label="Cloud-Name"]\`
-     - \`node3[label="Service: API"]\`
-   - **Safe labels (no quotes needed for simple identifiers):**
-     - \`User[label=User]\`
-     - \`Database[label=Database]\`
-     - \`API_Service[label=API_Service]\`
+     - \`node1[label=Presentation (CLI/UI)]\` ❌ (parentheses, slashes, spaces require quotes)
+     - \`node2[label=Cloud-Name]\` ❌ (hyphen requires quotes)
+     - \`node3[label=Service: API]\` ❌ (colon, space require quotes)
+   - **CORRECT:**
+     - \`node1[label="Presentation (CLI/UI)"]\` ✓
+     - \`node2[label="Cloud-Name"]\` ✓
+     - \`node3[label="Service: API"]\` ✓
+     - \`User[label="User"]\` ✓ (always safe to quote)
+     - \`Database[label=Database]\` ✓ (simple identifier, quotes optional but recommended)
    - **Edges:** Directed graphs use \`->\`, undirected graphs use \`--\`. Examples: \`node1 -> node2\`, \`node1 -- node2\`
-   - **Edge labels:** Use \`[label="Edge Label"]\` syntax. Labels with special characters must be quoted.
-   - **Attributes:** Use \`[key=value, key2=value2]\` syntax. String values containing special characters must be quoted.
-   - **All strings containing special characters must be quoted.** When in doubt, wrap labels and string values in double quotes.
-   - This syntax rule applies to ALL node labels, edge labels, and any text content in the diagram.
+   - **Edge labels and attributes:** Follow the same quoting rules as node attributes
+   - **When in doubt, always use double quotes for attribute values.** This ensures syntax validity.
 
 8. Process
    - Thoroughly scan directories and code to understand responsibilities before diagramming.
