@@ -12,6 +12,16 @@ export type GenerateRepoArchitectureDiagramParams = EnsureRepoAtRefParams & {
   client?: OpenAI;
 };
 
+export interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface GenerateRepoArchitectureDiagramResult {
+  diagram: string;
+  conversation: ConversationMessage[];
+}
+
 const ResponseContentSchema = z
   .object({
     type: z.string(),
@@ -175,7 +185,7 @@ let repositoryFetcher: RepositoryFetcher = concatenateFiles;
 
 export async function generateRepoArchitectureDiagram(
   params: GenerateRepoArchitectureDiagramParams,
-): Promise<string> {
+): Promise<GenerateRepoArchitectureDiagramResult> {
   const { owner, repo, ref, model = "gpt-5", client } = params;
 
   const codebaseListing = await repositoryFetcher({ owner, repo, ref });
@@ -183,7 +193,7 @@ export async function generateRepoArchitectureDiagram(
   const openaiClient = ensureClient(client);
 
   // Store original conversation for potential correction loops
-  const conversation = [
+  const conversation: ConversationMessage[] = [
     {
       role: "user",
       content: prompt,
@@ -206,7 +216,7 @@ export async function generateRepoArchitectureDiagram(
   const outputText = extractTextFromResponse(parsed);
 
   // Build full conversation history including assistant response
-  const fullConversation = [
+  const fullConversation: ConversationMessage[] = [
     ...conversation,
     {
       role: "assistant",
@@ -221,7 +231,64 @@ export async function generateRepoArchitectureDiagram(
     model,
   );
 
-  return validatedDiagram;
+  return {
+    diagram: validatedDiagram,
+    conversation: fullConversation,
+  };
+}
+
+export interface EnhanceDiagramWithDiffParams {
+  conversation: ConversationMessage[];
+  diff: string;
+  model?: string;
+  client?: OpenAI;
+}
+
+export async function enhanceArchitectureDiagramWithDiff(
+  params: EnhanceDiagramWithDiffParams,
+): Promise<GenerateRepoArchitectureDiagramResult> {
+  const { conversation, diff, model = "gpt-5", client } = params;
+  const openaiClient = ensureClient(client);
+
+  const instruction = `Modify the existing diagram to reflect the modifications to the diagram in the DIFF. The diagram you have is at the highest level of fidelity for this codebase and the DIFF may be at a more granular level of fidelity. Modify the diagram in a way that reflects the level of granularity that you see in the DIFF while couching the DIFF changes within this broader high level architectural context. The goal is for the author of the DIFF to see how their changes impact the overall code base and fit within it.`;
+
+  const userMsg = `${instruction}
+
+DIFF:
+\`\`\`diff
+${diff}
+\`\`\``;
+
+  conversation.push({
+    role: "user",
+    content: userMsg,
+  });
+
+  const response = await openaiClient.responses.create({
+    model,
+    input: conversation as Parameters<
+      typeof openaiClient.responses.create
+    >[0]["input"],
+  });
+
+  const parsed = ResponsesResultSchema.parse(response);
+  const outputText = extractTextFromResponse(parsed);
+
+  conversation.push({
+    role: "assistant",
+    content: outputText,
+  });
+
+  const validatedDiagram = await validateAndCorrectMermaidDiagram(
+    conversation,
+    openaiClient,
+    model,
+  );
+
+  return {
+    diagram: validatedDiagram,
+    conversation,
+  };
 }
 
 function setRepositoryFetcher(fetcher: RepositoryFetcher): void {

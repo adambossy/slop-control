@@ -46,7 +46,7 @@ async function main() {
   console.log(`Generating architecture diagram for ${owner}/${repo}@${ref}...`); // eslint-disable-line no-console
 
   try {
-    const mermaidDiagram = await generateRepoArchitectureDiagram({
+    const { diagram: mermaidDiagram } = await generateRepoArchitectureDiagram({
       owner,
       repo,
       ref,
