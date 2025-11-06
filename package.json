@@ -25,7 +25,7 @@
     "server:dev": "bunx tsx watch server/src/index.ts",
     "server:build": "tsc -p tsconfig.server.json",
     "server:start": "node --enable-source-maps server/dist/index.js",
-    "generate:architecture-diagram": "bun run scripts/generate-architecture-diagram-mermaid.ts",
+    "generate:architecture-diagram:mermaid": "bun run scripts/generate-architecture-diagram-mermaid.ts",
     "generate:architecture-diagram:dot": "bun run scripts/generate-architecture-diagram-dot.ts"
   },
   "devDependencies": {
