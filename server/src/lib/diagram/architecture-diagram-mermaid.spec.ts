@@ -1,5 +1,5 @@
 import type { FinalRequestOptions } from "openai/core";
-import type { ResponsesResult } from "./architecture-diagram.js";
+import type { ResponsesResult } from "./architecture-diagram-mermaid.js";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { APIPromise } from "openai/core";
 
@@ -36,11 +36,11 @@ mock.module("openai", () => {
   return { default: MockOpenAI };
 });
 
-const { buildArchitecturePrompt } = await import("./architecture-prompt.js");
+const { buildArchitecturePrompt } = await import("./architecture-prompt-mermaid.js");
 const {
   __internal: architectureDiagramInternals,
   generateRepoArchitectureDiagram,
-} = await import("./architecture-diagram.js");
+} = await import("./architecture-diagram-mermaid.js");
 const { default: OpenAI } = await import("openai");
 
 describe("architecture diagram prompt", () => {

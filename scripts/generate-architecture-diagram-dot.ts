@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { generateRepoArchitectureDiagram } from "../server/src/lib/diagram/architecture-diagram.js";
+import { generateRepoArchitectureDiagramDot } from "../server/src/lib/diagram/architecture-diagram-dot.js";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -22,10 +22,10 @@ async function main() {
 
   if (!repoUrl) {
     console.error(
-      "Usage: bun run scripts/generate-architecture-diagram.ts <repo-url>",
+      "Usage: bun run scripts/generate-architecture-diagram-dot.ts <repo-url>",
     );
     console.error(
-      "Example: bun run scripts/generate-architecture-diagram.ts https://github.com/adambossy/promptorium",
+      "Example: bun run scripts/generate-architecture-diagram-dot.ts https://github.com/adambossy/promptorium",
     );
     process.exit(1);
   }
@@ -34,13 +34,13 @@ async function main() {
   const ref = "main";
   const outputFile = join(
     process.cwd(),
-    `.diagrams/${repo}-architecture-diagram.md`,
+    `.diagrams/${repo}-architecture-diagram-dot.md`,
   );
 
   console.log(`Generating architecture diagram for ${owner}/${repo}@${ref}...`); // eslint-disable-line no-console
 
   try {
-    const mermaidDiagram = await generateRepoArchitectureDiagram({
+    const dotDiagram = await generateRepoArchitectureDiagramDot({
       owner,
       repo,
       ref,
@@ -51,8 +51,8 @@ async function main() {
 Generated from repository: https://github.com/${owner}/${repo}  
 Ref: ${ref}
 
-\`\`\`mermaid
-${mermaidDiagram}
+\`\`\`dot
+${dotDiagram}
 \`\`\`
 `;
 
@@ -66,4 +66,3 @@ ${mermaidDiagram}
 }
 
 main();
-
