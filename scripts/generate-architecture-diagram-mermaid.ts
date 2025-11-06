@@ -19,22 +19,28 @@ function parseRepoUrl(url: string): { owner: string; repo: string } {
 
 async function main() {
   const repoUrl = process.argv[2];
+  const model = process.argv[3] || "gpt-5";
 
   if (!repoUrl) {
     console.error(
-      "Usage: bun run scripts/generate-architecture-diagram-mermaid.ts <repo-url>",
+      "Usage: bun run scripts/generate-architecture-diagram-mermaid.ts <repo-url> [model]",
     );
     console.error(
-      "Example: bun run scripts/generate-architecture-diagram-mermaid.ts https://github.com/adambossy/promptorium",
+      "Example: bun run scripts/generate-architecture-diagram-mermaid.ts https://github.com/adambossy/promptorium gpt-5",
     );
     process.exit(1);
   }
 
   const { owner, repo } = parseRepoUrl(repoUrl);
   const ref = "main";
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d+Z$/, "")
+    .replace("T", "-");
   const outputFile = join(
     process.cwd(),
-    `.diagrams/${repo}-architecture-diagram.md`,
+    `.diagrams/${repo}-architecture-diagram-${model}-${timestamp}.md`,
   );
 
   console.log(`Generating architecture diagram for ${owner}/${repo}@${ref}...`); // eslint-disable-line no-console
@@ -44,6 +50,7 @@ async function main() {
       owner,
       repo,
       ref,
+      model,
     });
 
     const markdownContent = `# Architecture Diagram: ${owner}/${repo}
