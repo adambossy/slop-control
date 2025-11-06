@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { execSync } from "node:child_process";
+import { instance } from "@viz-js/viz";
 import type { EnsureRepoAtRefParams } from "@slop/github-repo-snapshot";
 import { concatenateFiles } from "@slop/github-repo-snapshot";
 import { buildArchitecturePromptDot } from "./architecture-prompt-dot.js";
@@ -90,34 +90,14 @@ function extractDotDiagram(text: string): string {
   throw new Error("Unable to locate Graphviz DOT diagram in model response.");
 }
 
-function validateDotDiagram(diagram: string): void {
+async function validateDotDiagram(diagram: string): Promise<void> {
   try {
-    // Check if dot command exists
-    try {
-      execSync("which dot", { stdio: "ignore" });
-    } catch {
-      throw new Error(
-        "Graphviz 'dot' command not found. Please install Graphviz. " +
-          "On macOS: brew install graphviz, On Ubuntu/Debian: sudo apt-get install graphviz, " +
-          "On Windows: choco install graphviz or download from https://graphviz.org/download/",
-      );
-    }
-
-    // Validate DOT syntax by running dot -Tdot (outputs DOT format)
+    const viz = await instance();
+    // Validate DOT syntax by attempting to render it
     // This will throw if the syntax is invalid
-    // Use stdin to pass the diagram content
-    execSync("dot -Tdot", {
-      input: diagram,
-      stdio: ["pipe", "pipe", "pipe"],
-      encoding: "utf-8",
-    });
+    viz.renderString(diagram);
   } catch (error) {
     if (error instanceof Error) {
-      // If it's already our custom error, rethrow it
-      if (error.message.includes("Graphviz 'dot' command not found")) {
-        throw error;
-      }
-      // Try to extract meaningful error from stderr if available
       const errorMessage = error.message || "Unknown DOT syntax error";
       throw new Error(`DOT syntax validation failed: ${errorMessage}`);
     }
@@ -136,8 +116,8 @@ async function validateAndCorrectDotDiagram(
       const diagram = extractDotDiagram(
         conversation[conversation.length - 1].content,
       );
-      // Validate the diagram using dot CLI
-      validateDotDiagram(diagram);
+      // Validate the diagram using @viz-js/viz
+      await validateDotDiagram(diagram);
       // If validation succeeds, return the diagram
       return diagram;
     } catch (error) {
