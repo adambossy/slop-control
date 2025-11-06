@@ -10,9 +10,6 @@
     "start": "node --enable-source-maps dist/index.js"
   },
   "dependencies": {
-    "@slop/github-repo-snapshot": "workspace:*",
-    "dompurify": "^3.2.0",
-    "jsdom": "^25.0.1",
-    "mermaid": "^11.12.1"
+    "@slop/github-repo-snapshot": "workspace:*"
   }
 }

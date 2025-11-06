@@ -1,12 +1,9 @@
 import OpenAI from "openai";
 import { z } from "zod";
-// Import DOMPurify preload first to initialize globals and DOMPurify before mermaid loads
-// This ensures DOM globals are set up and DOMPurify is initialized before mermaid imports it
-import "../../shims/preload-dompurify.js";
-import mermaid from "mermaid";
 import type { EnsureRepoAtRefParams } from "@slop/github-repo-snapshot";
 import { concatenateFiles } from "@slop/github-repo-snapshot";
 import { buildArchitecturePrompt } from "./architecture-prompt-mermaid.js";
+import { validateMermaid } from "../mermaid-renderer.js";
 
 export type GenerateRepoArchitectureDiagramParams = EnsureRepoAtRefParams & {
   /** Override the OpenAI model identifier. */
@@ -105,10 +102,10 @@ async function validateAndCorrectMermaidDiagram(
       const diagram = extractMermaidDiagram(
         conversation[conversation.length - 1].content,
       );
-      // Validate the diagram using mermaid.parse()
-      // parse() throws if invalid and suppressErrors is false
-      await mermaid.parse(diagram, { suppressErrors: false });
-      // If validation succeeds, return the diagram
+      const isValid = await validateMermaid(diagram);
+      if (!isValid) {
+        throw new Error("Invalid Mermaid diagram syntax");
+      }
       return diagram;
     } catch (error) {
       const errorMessage =
