@@ -250,7 +250,27 @@ export async function enhanceArchitectureDiagramWithDiff(
   const { conversation, diff, model = "gpt-5", client } = params;
   const openaiClient = ensureClient(client);
 
-  const instruction = `Modify the existing diagram to reflect the modifications to the diagram in the DIFF. The diagram you have is at the highest level of fidelity for this codebase and the DIFF may be at a more granular level of fidelity. Modify the diagram in a way that reflects the level of granularity that you see in the DIFF while couching the DIFF changes within this broader high level architectural context. The goal is for the author of the DIFF to see how their changes impact the overall code base and fit within it.`;
+  const instruction = `Modify the existing diagram to reflect the modifications to the diagram in the DIFF. The diagram you have is at the highest level of fidelity for this codebase and the DIFF may be at a more granular level of fidelity. Modify the diagram in a way that reflects the level of granularity that you see in the DIFF while couching the DIFF changes within this broader high level architectural context. The goal is for the author of the DIFF to see how their changes impact the overall code base and fit within it.
+
+**CRITICAL: Color-code all changes in the diagram:**
+- **Additions** (new nodes, edges, or components): Use GREEN styling
+- **Removals** (deleted nodes, edges, or components): Use RED styling
+- **Modifications** (changed nodes, edges, or components): Use ORANGE styling
+- **Unchanged** elements: Keep the default styling
+
+Use Mermaid class definitions to apply colors. Define these classes at the end of your diagram:
+\`\`\`
+classDef added fill:#1a4d1a,stroke:#2d7a2d,color:#b3ffb3,stroke-width:3px
+classDef removed fill:#4d1a1a,stroke:#7a2d2d,color:#ffb3b3,stroke-width:3px
+classDef modified fill:#4d3a1a,stroke:#7a5a2d,color:#ffd9b3,stroke-width:3px
+\`\`\`
+
+Apply these classes to nodes using the ::: syntax, for example:
+- \`A["New Component"]:::added\`
+- \`B["Removed Component"]:::removed\`
+- \`C["Modified Component"]:::modified\`
+
+For edges/links, add text labels indicating the change type where appropriate.`;
 
   const userMsg = `${instruction}
 
